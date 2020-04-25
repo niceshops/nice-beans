@@ -15,6 +15,11 @@ use Serializable;
  */
 interface BeanInterface extends Serializable
 {
+    
+    
+    const SERIALIZE_DATA_KEY = "data";
+    
+    
     /**
      * @param string $name
      * @param mixed  $value
