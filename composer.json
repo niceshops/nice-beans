@@ -1,6 +1,6 @@
 {
-    "name": "niceshops-dev/nice-{component}",
-    "description": "Niceshops {Component}",
+    "name": "niceshops/nice-beans",
+    "description": "JavaBeans Implementierung für PHP",
     "license" : "BSD-3-Clause",
     "require": {
         "php": ">=7.2.0"
@@ -10,12 +10,12 @@
     },
     "autoload": {
         "psr-4": {
-            "NiceshopsDev\\Nice{Component}\\": "src/"
+            "NiceshopsDev\\NiceBean\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "NiceshopsDev\\Nice{Component}\\": "test/"
+            "NiceshopsDev\\NiceBean\\": "test/"
         }
     },
     "scripts": {

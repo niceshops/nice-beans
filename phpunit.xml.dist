@@ -7,7 +7,7 @@
          beStrictAboutChangesToGlobalState="true"
 >
     <testsuites>
-        <testsuite name="nice-{component}">
+        <testsuite name="nice-beans">
             <directory>./test/</directory>
         </testsuite>
     </testsuites>

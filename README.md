@@ -1,10 +1,10 @@
-# nice-{component}
+# nice-beans
 [TODO] write component description
 
 ## Installation
 Run the following to install this library:
 ```bash
-$ composer require niceshops-dev/nice-{component}
+$ composer require niceshops/nice-beans
 ```
 
 or if composer package is not available add the following to your composer.json
@@ -12,10 +12,10 @@ or if composer package is not available add the following to your composer.json
 "repositories": [
     {
         "type": "vcs",
-        "url": "https://github.com/niceshops-dev/nice-{component}"
+        "url": "https://github.com/niceshops/nice-beans"
     }
 ],
 "require": {
-    "niceshops-dev/nice-{component}": "dev-master"
+    "niceshops/nice-beans": "dev-master"
 }
 ```
