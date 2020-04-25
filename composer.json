@@ -3,7 +3,8 @@
     "description": "JavaBeans Implementierung für PHP",
     "license" : "BSD-3-Clause",
     "require": {
-        "php": ">=7.2.0"
+        "php": ">=7.2.0",
+        "niceshops/nice-core": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^7.2"
