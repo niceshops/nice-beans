@@ -11,7 +11,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 
 /**
  * Class DefaultTestCaseTest
- * @package Core
+ * @package NiceshopsDev\Bean
  */
 class DefaultTestCaseTest extends \NiceshopsDev\NiceCore\PHPUnit\DefaultTestCase
 {
