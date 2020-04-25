@@ -10,12 +10,12 @@
     },
     "autoload": {
         "psr-4": {
-            "NiceshopsDev\\NiceBean\\": "src/"
+            "NiceshopsDev\\Bean\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "NiceshopsDev\\NiceBean\\": "test/"
+            "NiceshopsDev\\Bean\\": "test/"
         }
     },
     "scripts": {
