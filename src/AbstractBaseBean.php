@@ -9,10 +9,13 @@ namespace NiceshopsDev\Bean;
 
 
 use ArrayAccess;
+use ArrayObject;
 use Countable;
 use IteratorAggregate;
+use NiceshopsDev\Bean\BeanList\BeanListInterface;
 use NiceshopsDev\Bean\JsonSerializable\JsonSerializableInterface;
 use NiceshopsDev\Bean\JsonSerializable\JsonSerializableTrait;
+use stdClass;
 
 /**
  * Class AbstractBaseBean
@@ -156,6 +159,8 @@ abstract class AbstractBaseBean implements BeanInterface, ArrayAccess, IteratorA
      *
      * @return $this
      * @throws BeanException     if invalid name is defined or data could not be set
+     * @todo refactore dot-notation name handling (extract method)
+     * @todo UnitTests
      */
     public function setData($name, $value)
     {
@@ -169,7 +174,6 @@ abstract class AbstractBaseBean implements BeanInterface, ArrayAccess, IteratorA
         
         //  @todo isSealed check at SealableBeanTrait
         
-        $error = false;
         $arrName = null;
         if (strpos($origName, ".") >= 1) {
             $arrName = array_values(array_map("trim", explode(".", $origName)));
@@ -184,7 +188,93 @@ abstract class AbstractBaseBean implements BeanInterface, ArrayAccess, IteratorA
             $dataType = $this->getDataTypeCallable($name);
         }
         
+        $value = $this->normalizeDataValue($value, $dataType);
+        
+        //  @todo hasDataModified check at AbstractModifiedBean     // $modified = $this->hasDataModified($name, $value);
+        
+        if ($arrName) {
+            $arrName = array_values(array_map("trim", explode(".", $origName)));
+            $context =& $this->data;
+            $deep = 1;
+            while ($deep < 100 && count($arrName)) {
+                $contextName = array_shift($arrName);
+                if ($deep == 1) {
+                    $contextName = $this->normalizeDataName($contextName);
+                }
+                ++$deep;
+                
+                if ((is_array($context) || $context instanceof ArrayObject)) {
+                    if (!array_key_exists($contextName, $context) && $arrName) {
+                        $context[$contextName] = [];
+                    }
+                    
+                    if (!$arrName) {
+                        $context[$contextName] = $value;
+                    } else {
+                        $context =& $context[$contextName];
+                    }
+                } elseif (($context instanceof stdClass)) {
+                    if (!array_key_exists($contextName, (array)$context) && $arrName) {
+                        $context->{$contextName} = new  stdClass();
+                    }
+                    
+                    if (!$arrName) {
+                        $context->{$contextName} = $value;
+                    } else {
+                        $context =& $context->{$contextName};
+                    }
+                } elseif (($context instanceof BeanInterface)) {
+                    if ($context instanceof BeanListInterface && (string)(int)$contextName === (string)$contextName) {
+                        if ($context->offsetExists($contextName)) {
+                            $context->offsetGet($contextName)->setData(implode(".", $arrName), $value);
+                        }
+                    } else {
+                        array_unshift($arrName, $contextName);
+                        $context->setData(implode(".", $arrName), $value);
+                    }
+                    break;
+                } else {
+                    throw new BeanException(sprintf("Could not set data '%s'!", $name));
+                    break;
+                }
+            }
+            
+            unset($context);
+        } else {
+            $this->data[$name] = $value;
+        }
+
+//        if ($dataType === self::DATA_TYPE_ARRAY && is_array($value)) {
+//            $this->normalizeDataValue_for_normalizedDataName($name);
+//        }
+//
+//        $this->touchData($name, $modified);
         
         return $this;
     }
+    
+    
+    /**
+     * @param mixed  $value
+     * @param string $dataType
+     *
+     * @return mixed
+     * @todo implement method
+     */
+    protected function normalizeDataValue($value, string $dataType = null)
+    {
+        if (is_null($value)) {
+            return null;
+        }
+        
+        if (null !== $dataType) {
+            switch ($dataType) {
+                default:
+                    break;
+            }
+        }
+        
+        return $value;
+    }
+    
 }
