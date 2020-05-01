@@ -717,7 +717,7 @@ class AbstractBaseBeanTest extends DefaultTestCase
     
     
     /**
-     * @group unit
+     * @group  unit
      * @small
      *
      * @covers \NiceshopsDev\Bean\AbstractBaseBean::getData

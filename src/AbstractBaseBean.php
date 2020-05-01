@@ -59,6 +59,213 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     
     
     /**
+     * @param string $name
+     * @param        $value
+     *
+     * @return $this
+     * @throws BeanException     if invalid name is defined or data could not be set
+     * @todo refactore dot-notation name handling (extract method)
+     * @todo UnitTests
+     */
+    public function setData($name, $value)
+    {
+        $origName = $name;
+        $name = $this->normalizeDataName($name);
+        if (is_null($name)) {
+            return $this;
+        }
+        
+        //  @todo isFrozen check at FreezableBeanTrait
+        
+        //  @todo isSealed check at SealableBeanTrait
+        
+        $arrName = null;
+        if (strpos($origName, ".") >= 1) {
+            $arrName = array_values(array_map("trim", explode(".", $origName)));
+            
+            $this->setOriginalDataName($arrName[0], $this->normalizeDataName($arrName[0]));
+        } else {
+            $this->setOriginalDataName($origName, $name);
+        }
+        
+        $dataType = $this->getDataType($name);
+        if ($dataType === self::DATA_TYPE_CALLABLE) {
+            $dataType = $this->getDataTypeCallable($name);
+        }
+        
+        $value = $this->normalizeDataValue($value, $dataType);
+        
+        //  @todo hasDataModified check at AbstractModifiedBean     // $modified = $this->hasDataModified($name, $value);
+        
+        if ($arrName) {
+            $arrName = array_values(array_map("trim", explode(".", $origName)));
+            $context =& $this->data;
+            $deep = 1;
+            while ($deep < 100 && count($arrName)) {
+                $contextName = array_shift($arrName);
+                if ($deep == 1) {
+                    $contextName = $this->normalizeDataName($contextName);
+                }
+                ++$deep;
+                
+                if ((is_array($context) || $context instanceof ArrayObject)) {
+                    if (!array_key_exists($contextName, $context) && $arrName) {
+                        $context[$contextName] = [];
+                    }
+                    
+                    if (!$arrName) {
+                        $context[$contextName] = $value;
+                    } else {
+                        $context =& $context[$contextName];
+                    }
+                } elseif (($context instanceof stdClass)) {
+                    if (!array_key_exists($contextName, (array)$context) && $arrName) {
+                        $context->{$contextName} = new  stdClass();
+                    }
+                    
+                    if (!$arrName) {
+                        $context->{$contextName} = $value;
+                    } else {
+                        $context =& $context->{$contextName};
+                    }
+                } elseif (($context instanceof BeanInterface)) {
+                    if ($context instanceof BeanListInterface && (string)(int)$contextName === (string)$contextName) {
+                        if ($context->offsetExists($contextName)) {
+                            $context->offsetGet($contextName)->setData(implode(".", $arrName), $value);
+                        }
+                    } else {
+                        array_unshift($arrName, $contextName);
+                        $context->setData(implode(".", $arrName), $value);
+                    }
+                    break;
+                } else {
+                    throw new BeanException(sprintf("Could not set data '%s'!", $name));
+                    break;
+                }
+            }
+            
+            unset($context);
+        } else {
+            $this->data[$name] = $value;
+        }
+        
+        if ($dataType === self::DATA_TYPE_ARRAY && is_array($value)) {
+            $this->normalizeDataValue_for_normalizedDataName($name);
+        }
+        
+        //  @todo hasDataModified check at AbstractModifiedBean     // $this->touchData($name, $modified);
+        
+        return $this;
+    }
+    
+    
+    /**
+     * @param string $name
+     *
+     * @return mixed
+     * @throws BeanException if invalid name is defined or data could not found
+     * @todo should it possible to return values by reference?!?
+     */
+    public function getData($name)
+    {
+        $data = null;
+        
+        $result = $this->findData($name);
+        if (!$result["found"]) {
+            throw new BeanException(sprintf("Data '%s' not found!", $name), BeanException::ERROR_CODE_DATA_NOT_FOUND);
+        } else {
+            if (array_key_exists("value", $result)) {
+                $data = $result["value"];
+            }
+        }
+        
+        return $data;
+    }
+    
+    
+    /**
+     * @param string $name
+     *
+     * @return mixed    the removed data
+     * @throws BeanException    Data at passed name not found
+     */
+    public function removeData($name)
+    {
+        $name = $this->normalizeDataName($name);
+        if (!$this->hasData($name)) {
+            throw new BeanException(sprintf("Data '%s' not found!", $name), BeanException::ERROR_CODE_DATA_NOT_FOUND);
+        }
+        
+        //  @todo isFrozen check at FreezableBeanTrait
+        
+        //  @todo isSealed check at SealableBeanTrait
+        
+        $removedData = $this->data[$name];
+        unset($this->data[$name]);
+        
+        $this->removeDataType($name);
+        
+        $this->unsetOriginalDataName($name);
+        
+        //  @todo remove modified meta data for removed data check at AbstractModifiedBean     // unset($this->arrModified[$name]);
+        
+        return $removedData;
+    }
+    
+    
+    /**
+     * @return $this
+     */
+    public function resetData()
+    {
+        //  @todo isFrozen check at FreezableBeanTrait
+        
+        //  @todo isSealed check at SealableBeanTrait
+        
+        $this->data = [];
+        
+        //  @todo reset modified meta data at AbstractModifiedBean     // $this->arrModified = [];
+        
+        return $this;
+    }
+    
+    
+    /**
+     * @param string $name
+     *
+     * @return bool
+     * @throws BeanException
+     */
+    public function hasData($name)
+    {
+        $result = $this->findData($name);
+        
+        return (bool)$result["found"];
+    }
+    
+    
+    /**
+     * @param bool $useOrigDataNames
+     *
+     * @return array
+     * @todo UnitTests
+     */
+    public function toArray($useOrigDataNames = true)
+    {
+        if (!$useOrigDataNames) {
+            return $this->data;
+        }
+        
+        $arrData = [];
+        foreach ($this->data as $name => $value) {
+            $arrData[$this->getOriginalDataName($name)] = $value;
+        }
+        
+        return $arrData;
+    }
+    
+    
+    /**
      * @param $name
      *
      * @return string
@@ -179,107 +386,6 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     
     
     /**
-     * @param string $name
-     * @param        $value
-     *
-     * @return $this
-     * @throws BeanException     if invalid name is defined or data could not be set
-     * @todo refactore dot-notation name handling (extract method)
-     * @todo UnitTests
-     */
-    public function setData($name, $value)
-    {
-        $origName = $name;
-        $name = $this->normalizeDataName($name);
-        if (is_null($name)) {
-            return $this;
-        }
-        
-        //  @todo isFrozen check at FreezableBeanTrait
-        
-        //  @todo isSealed check at SealableBeanTrait
-        
-        $arrName = null;
-        if (strpos($origName, ".") >= 1) {
-            $arrName = array_values(array_map("trim", explode(".", $origName)));
-            
-            $this->setOriginalDataName($arrName[0], $this->normalizeDataName($arrName[0]));
-        } else {
-            $this->setOriginalDataName($origName, $name);
-        }
-        
-        $dataType = $this->getDataType($name);
-        if ($dataType === self::DATA_TYPE_CALLABLE) {
-            $dataType = $this->getDataTypeCallable($name);
-        }
-        
-        $value = $this->normalizeDataValue($value, $dataType);
-        
-        //  @todo hasDataModified check at AbstractModifiedBean     // $modified = $this->hasDataModified($name, $value);
-        
-        if ($arrName) {
-            $arrName = array_values(array_map("trim", explode(".", $origName)));
-            $context =& $this->data;
-            $deep = 1;
-            while ($deep < 100 && count($arrName)) {
-                $contextName = array_shift($arrName);
-                if ($deep == 1) {
-                    $contextName = $this->normalizeDataName($contextName);
-                }
-                ++$deep;
-                
-                if ((is_array($context) || $context instanceof ArrayObject)) {
-                    if (!array_key_exists($contextName, $context) && $arrName) {
-                        $context[$contextName] = [];
-                    }
-                    
-                    if (!$arrName) {
-                        $context[$contextName] = $value;
-                    } else {
-                        $context =& $context[$contextName];
-                    }
-                } elseif (($context instanceof stdClass)) {
-                    if (!array_key_exists($contextName, (array)$context) && $arrName) {
-                        $context->{$contextName} = new  stdClass();
-                    }
-                    
-                    if (!$arrName) {
-                        $context->{$contextName} = $value;
-                    } else {
-                        $context =& $context->{$contextName};
-                    }
-                } elseif (($context instanceof BeanInterface)) {
-                    if ($context instanceof BeanListInterface && (string)(int)$contextName === (string)$contextName) {
-                        if ($context->offsetExists($contextName)) {
-                            $context->offsetGet($contextName)->setData(implode(".", $arrName), $value);
-                        }
-                    } else {
-                        array_unshift($arrName, $contextName);
-                        $context->setData(implode(".", $arrName), $value);
-                    }
-                    break;
-                } else {
-                    throw new BeanException(sprintf("Could not set data '%s'!", $name));
-                    break;
-                }
-            }
-            
-            unset($context);
-        } else {
-            $this->data[$name] = $value;
-        }
-        
-        if ($dataType === self::DATA_TYPE_ARRAY && is_array($value)) {
-            $this->normalizeDataValue_for_normalizedDataName($name);
-        }
-        
-        //  @todo hasDataModified check at AbstractModifiedBean     // $this->touchData($name, $modified);
-        
-        return $this;
-    }
-    
-    
-    /**
      * @param mixed  $value
      * @param string $dataType
      *
@@ -395,30 +501,6 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         }
         
         return array_values($arrDataTypeName);
-    }
-    
-    
-    /**
-     * @param string $name
-     *
-     * @return mixed
-     * @throws BeanException if invalid name is defined or data could not found
-     * @todo should it possible to return values by reference?!?
-     */
-    public function getData($name)
-    {
-        $data = null;
-        
-        $result = $this->findData($name);
-        if (!$result["found"]) {
-            throw new BeanException(sprintf("Data '%s' not found!", $name), BeanException::ERROR_CODE_DATA_NOT_FOUND);
-        } else {
-            if (array_key_exists("value", $result)) {
-                $data = $result["value"];
-            }
-        }
-        
-        return $data;
     }
     
     
@@ -656,87 +738,5 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         }
         
         return [$object, $found];
-    }
-    
-    
-    /**
-     * @param string $name
-     *
-     * @return bool
-     * @throws BeanException
-     */
-    public function hasData($name)
-    {
-        $result = $this->findData($name);
-        
-        return (bool)$result["found"];
-    }
-    
-    
-    /**
-     * @param string $name
-     *
-     * @return mixed    the removed data
-     * @throws BeanException    Data at passed name not found
-     */
-    public function removeData($name)
-    {
-        $name = $this->normalizeDataName($name);
-        if (!$this->hasData($name)) {
-            throw new BeanException(sprintf("Data '%s' not found!", $name), BeanException::ERROR_CODE_DATA_NOT_FOUND);
-        }
-        
-        //  @todo isFrozen check at FreezableBeanTrait
-        
-        //  @todo isSealed check at SealableBeanTrait
-        
-        $removedData = $this->data[$name];
-        unset($this->data[$name]);
-    
-        $this->removeDataType($name);
-    
-        $this->unsetOriginalDataName($name);
-        
-        //  @todo remove modified meta data for removed data check at AbstractModifiedBean     // unset($this->arrModified[$name]);
-        
-        return $removedData;
-    }
-    
-    
-    /**
-     * @return $this
-     */
-    public function resetData()
-    {
-        //  @todo isFrozen check at FreezableBeanTrait
-        
-        //  @todo isSealed check at SealableBeanTrait
-        
-        $this->data = [];
-        
-        //  @todo reset modified meta data at AbstractModifiedBean     // $this->arrModified = [];
-        
-        return $this;
-    }
-    
-    
-    /**
-     * @param bool $useOrigDataNames
-     *
-     * @return array
-     * @todo UnitTests
-     */
-    public function toArray($useOrigDataNames = true)
-    {
-        if (!$useOrigDataNames) {
-            return $this->data;
-        }
-        
-        $arrData = [];
-        foreach ($this->data as $name => $value) {
-            $arrData[$this->getOriginalDataName($name)] = $value;
-        }
-        
-        return $arrData;
     }
 }
