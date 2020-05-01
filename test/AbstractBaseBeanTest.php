@@ -811,4 +811,77 @@ class AbstractBaseBeanTest extends DefaultTestCase
         
         $this->assertFalse($this->object->hasData($name));
     }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::removeDataType
+     */
+    public function testRemoveDataType()
+    {
+        $arrDataType = ["foo" => "bar", "baz" => "bat"];
+        $this->invokeSetProperty($this->object, "arrDataType", $arrDataType);
+        
+        //  remove not existing data type
+        $this->assertSame($this->object, $this->invokeMethod($this->object, "removeDataType", "bat"));
+        $this->assertSame($arrDataType, $this->invokeGetProperty($this->object, "arrDataType"));
+        
+        //  remove existing data type
+        $this->assertSame($this->object, $this->invokeMethod($this->object, "removeDataType", "foo"));
+        $this->assertSame(["baz" => "bat"], $this->invokeGetProperty($this->object, "arrDataType"));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::removeData
+     */
+    public function testRemoveData_DataNotFound()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["normalizeDataName", "hasData"]
+        )->getMockForAbstractClass();
+        $name = " foo ";
+        $nameNormalized = "foo";
+        $hasData = false;
+        
+        $this->object->expects($this->once())->method("normalizeDataName")->with(...[$name])->willReturn($nameNormalized);
+        $this->object->expects($this->once())->method("hasData")->with(...[$nameNormalized])->willReturn($hasData);
+        $this->expectException(BeanException::class);
+        $this->expectExceptionCode(BeanException::ERROR_CODE_DATA_NOT_FOUND);
+        
+        $this->object->removeData($name);
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::removeData
+     * @throws BeanException
+     */
+    public function testRemoveData_DataFound()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["normalizeDataName", "hasData", "removeDataType", "unsetOriginalDataName"]
+        )->getMockForAbstractClass();
+        $name = " foo ";
+        $nameNormalized = "foo";
+        $hasData = true;
+        $arrData = ["foo" => "bar", "baz" => "bat"];
+        
+        $this->invokeSetProperty($this->object, "data", $arrData);
+        $this->object->expects($this->once())->method("normalizeDataName")->with(...[$name])->willReturn($nameNormalized);
+        $this->object->expects($this->once())->method("hasData")->with(...[$nameNormalized])->willReturn($hasData);
+        $this->object->expects($this->once())->method("removeDataType")->with(...[$nameNormalized]);
+        $this->object->expects($this->once())->method("unsetOriginalDataName")->with(...[$nameNormalized]);
+        
+        $this->assertSame("bar", $this->object->removeData($name));
+        $this->assertSame(["baz" => "bat"], $this->invokeGetProperty($this->object, "data"));
+    }
 }

@@ -149,6 +149,21 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     /**
      * @param string $name
      *
+     * @return $this
+     */
+    protected function removeDataType(string $name)
+    {
+        if (array_key_exists($name, $this->arrDataType)) {
+            unset($this->arrDataType[$name]);
+        }
+        
+        return $this;
+    }
+    
+    
+    /**
+     * @param string $name
+     *
      * @return callable|null
      * @throws BeanException
      */
@@ -657,4 +672,33 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         return (bool)$result["found"];
     }
     
+    
+    /**
+     * @param string $name
+     *
+     * @return mixed    the removed data
+     * @throws BeanException    Data at passed name not found
+     */
+    public function removeData($name)
+    {
+        $name = $this->normalizeDataName($name);
+        if (!$this->hasData($name)) {
+            throw new BeanException(sprintf("Data '%s' not found!", $name), BeanException::ERROR_CODE_DATA_NOT_FOUND);
+        }
+        
+        //  @todo isFrozen check at FreezableBeanTrait
+        
+        //  @todo isSealed check at SealableBeanTrait
+        
+        $removedData = $this->data[$name];
+        unset($this->data[$name]);
+    
+        $this->removeDataType($name);
+    
+        $this->unsetOriginalDataName($name);
+        
+        //  @todo remove modified meta data for removed data check at AbstractModifiedBean     // unset($this->arrModified[$name]);
+        
+        return $removedData;
+    }
 }
