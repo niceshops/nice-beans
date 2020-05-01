@@ -271,7 +271,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
      * @return string
      * @throws BeanException
      */
-    public function normalizeDataName(string $name): string
+    protected function normalizeDataName(string $name): string
     {
         if (is_string($name) && array_key_exists($name, $this->data)) {
             return $name;
