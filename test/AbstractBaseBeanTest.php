@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace NiceshopsDev\Bean;
 
+use Generator;
 use NiceshopsDev\Bean\PHPUnit\DefaultTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
@@ -195,5 +196,375 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $this->object->expects($this->once())->method("normalizeDataName")->with(...[$name])->willReturn($key);
         
         $this->assertNull($this->invokeMethod($this->object, "getDataType", $name));
+    }
+    
+    
+//    /**
+//     * @group  integration
+//     * @small
+//     *
+//     * @covers \NiceshopsDev\Bean\AbstractBaseBean::setData
+//     * @uses \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue_for_normalizedDataName
+//     * @throws BeanException
+//     * @todo implement BeanInterface at AbstractBaseBean to enable test "testSetData_with_structuredData_and_DataTypes"
+//     */
+//    public function testSetData_with_structuredData_and_DataTypes()
+//    {
+//        $this->markTestSkipped("implement BeanInterface at AbstractBaseBean to enable test");
+//        $bean = new class extends AbstractBaseBean {
+//
+//
+//            /**
+//             *  constructor.
+//             */
+//            public function __construct()
+//            {
+//                parent::__construct();
+//                $this->setDataType("database", AbstractBaseBean::DATA_TYPE_ARRAY);
+//                $this->setDataType("database.table", AbstractBaseBean::DATA_TYPE_STRING);
+//                $this->setDataType("database.column.identity", AbstractBaseBean::DATA_TYPE_STRING);
+//                $this->setDataType("database.column", AbstractBaseBean::DATA_TYPE_ARRAY);
+//            }
+//        };
+//
+//        $bean->setData("database", []);
+//        $this->assertSame(["column" => ["identity" => null], "table" => null], $bean->getData("database"));
+//
+//        $bean->setData("database.column", ["identity" => true]);
+//        $this->assertSame(["column" => ["identity" => "1"], "table" => null], $bean->getData("database"));
+//
+//        $bean->setData("database.column", ["identity" => null]);
+//        $this->assertSame(["column" => ["identity" => null], "table" => null], $bean->getData("database"));
+//
+//        $bean->setData("database.column.identity", 123);
+//        $this->assertSame(["column" => ["identity" => "123"], "table" => null], $bean->getData("database"));
+//    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function normalizeDataValue_for_normalizedDataNameDataProvider()
+    {
+        yield [[], []];
+        yield [["foo" => "bar", "baz" => "bat", "bat" => "bam"], ["bat", "baz", "foo"]];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider normalizeDataValue_for_normalizedDataNameDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue_for_normalizedDataName
+     *
+     * @param array $arrDataName_with_DataTypeDefinition_DefaultValue_Map [ <DATA_NAME> => <DEFAULT_VALUE>, ... ]
+     * @param array $arrDataName_with_DataTypeDefinition_sorted
+     */
+    public function testNormalizeDataValue_for_normalizedDataName(array $arrDataName_with_DataTypeDefinition_DefaultValue_Map, array $arrDataName_with_DataTypeDefinition_sorted)
+    {
+        $normalizedDataName = "foo";
+        $arrDataName_with_DataTypeDefinition = array_keys($arrDataName_with_DataTypeDefinition_DefaultValue_Map);
+        $arrSetData_Param = [];
+        $arrGetData_with_DefaultValue_Return = [];
+        $arrGetData_with_DefaultValue_Param = [];
+        
+        foreach ($arrDataName_with_DataTypeDefinition_sorted as $dataName) {
+            $defaultValue = $arrDataName_with_DataTypeDefinition_DefaultValue_Map[$dataName];
+            $arrSetData_Param[] = [$dataName, $defaultValue];
+            $arrGetData_with_DefaultValue_Param[] = [$dataName];
+            $arrGetData_with_DefaultValue_Return[] = $defaultValue;
+        }
+        
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["getDataName_List_with_DataNamePrefix_and_DataTypeDefinition", "setData", "getData_with_DefaultValue"]
+        )->getMockForAbstractClass();
+        
+        $this->object->expects($this->once())->method("getDataName_List_with_DataNamePrefix_and_DataTypeDefinition")->with(...[$normalizedDataName, true])->willReturn($arrDataName_with_DataTypeDefinition);
+        
+        if ($arrDataName_with_DataTypeDefinition) {
+            $this->object->expects($this->exactly(count($arrDataName_with_DataTypeDefinition)))->method("getData_with_DefaultValue")->withConsecutive(
+                ...$arrGetData_with_DefaultValue_Param
+            )->willReturn(...$arrGetData_with_DefaultValue_Return);
+            $this->object->expects($this->exactly(count($arrDataName_with_DataTypeDefinition)))->method("setData")->withConsecutive(...$arrSetData_Param);
+        } else {
+            $this->object->expects($this->never())->method("getData_with_DefaultValue");
+            $this->object->expects($this->never())->method("setData");
+        }
+        
+        $this->assertSame($this->object, $this->invokeMethod($this->object, "normalizeDataValue_for_normalizedDataName", $normalizedDataName));
+    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function getData_with_DefaultValue_hasDataDataProvider()
+    {
+        yield ["", "", ""];
+        yield ["", "bar", "bar"];
+        yield ["foo", "bar", "bar"];
+        yield ["foo", "", ""];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider getData_with_DefaultValue_hasDataDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::getData_with_DefaultValue
+     *
+     * @param string $name
+     * @param        $value
+     * @param        $expectedValue
+     */
+    public function testGetData_with_DefaultValue_hasData(string $name, $value, $expectedValue)
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["hasData", "getData", "getDefaultValue_for_DataType", "getDataType"]
+        )->getMockForAbstractClass();
+        
+        $this->object->expects($this->once())->method("hasData")->with(...[$name])->willReturn(true);
+        $this->object->expects($this->once())->method("getData")->with(...[$name])->willReturn($value);
+        
+        $this->object->expects($this->never())->method("getDefaultValue_for_DataType");
+        $this->object->expects($this->never())->method("getDataType");
+        
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "getData_with_DefaultValue", $name));
+    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function getData_with_DefaultValue_hasDataTypeDataProvider()
+    {
+        yield ["", "", "", ""];
+        yield ["foo", "", "", ""];
+        yield ["", "bar", "", ""];
+        yield ["", "", "baz", "baz"];
+        yield ["foo", "bar", "", ""];
+        yield ["foo", "", "baz", "baz"];
+        yield ["", "bar", "baz", "baz"];
+        yield ["foo", "bar", "baz", "baz"];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider getData_with_DefaultValue_hasDataTypeDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::getData_with_DefaultValue
+     *
+     * @param string $name
+     * @param string $dataType
+     * @param        $value
+     * @param        $expectedValue
+     */
+    public function testGetData_with_DefaultValue_hasDataType(string $name, $dataType, $value, $expectedValue)
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["hasData", "getData", "getDefaultValue_for_DataType", "getDataType"]
+        )->getMockForAbstractClass();
+        
+        $this->object->expects($this->once())->method("hasData")->with(...[$name])->willReturn(false);
+        $this->object->expects($this->once())->method("getDataType")->with(...[$name])->willReturn($dataType);
+        $this->object->expects($this->once())->method("getDefaultValue_for_DataType")->with(...[$dataType])->willReturn($value);
+        
+        $this->object->expects($this->never())->method("getData");
+        
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "getData_with_DefaultValue", $name));
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::getData_with_DefaultValue
+     */
+    public function testGetData_with_DefaultValue_noData_and_noDataType()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["hasData", "getData", "getDefaultValue_for_DataType", "getDataType"]
+        )->getMockForAbstractClass();
+        
+        $name = "foo";
+        $expectedValue = null;
+        
+        $this->object->expects($this->once())->method("hasData")->with(...[$name])->willReturn(false);
+        $this->object->expects($this->once())->method("getDataType")->with(...[$name])->willReturn(null);
+        
+        $this->object->expects($this->never())->method("getData");
+        $this->object->expects($this->never())->method("getDefaultValue_for_DataType");
+        
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "getData_with_DefaultValue", $name));
+    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function getDefaultValue_for_DataTypeDataProvider()
+    {
+        yield ["", null];
+        yield [AbstractBaseBean::DATA_TYPE_BOOL, null];
+        yield [AbstractBaseBean::DATA_TYPE_INT, null];
+        yield [AbstractBaseBean::DATA_TYPE_STRING, null];
+        yield [AbstractBaseBean::DATA_TYPE_FLOAT, null];
+        yield [AbstractBaseBean::DATA_TYPE_CALLABLE, null];
+        yield [AbstractBaseBean::DATA_TYPE_ITERABLE, null];
+        yield [AbstractBaseBean::DATA_TYPE_OBJECT, null];
+        yield [AbstractBaseBean::DATA_TYPE_DATE, null];
+        yield [AbstractBaseBean::DATA_TYPE_DATETIME_PHP, null];
+        yield [AbstractBaseBean::DATA_TYPE_ARRAY, []];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider getDefaultValue_for_DataTypeDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::getDefaultValue_for_DataType
+     *
+     * @param string $dataType
+     * @param        $expectedValue
+     */
+    public function testGetDefaultValue_for_DataType(string $dataType, $expectedValue)
+    {
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "getDefaultValue_for_DataType", $dataType));
+    }
+    
+    
+    /**
+     * @group unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getDataType_List
+     */
+    public function testGetDataType_List()
+    {
+        $this->assertTrue(is_array($this->invokeMethod($this->object, "getDataType_List")));
+    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function getDataName_List_with_DataNamePrefix_and_DataTypeDefinitionDataProvider()
+    {
+        yield [[], "", true, null, []];
+        yield [
+            ["foo" => "array", "foo.baz" => "array", "foo.baz.bat" => "bool", "foo.bar" => "string", "bar.baz" => "int"],
+            "foo",
+            true,
+            null,
+            ["foo.baz", "foo.baz.bat", "foo.bar"],
+        ];
+        yield [
+            ["foo" => "array", "foo.baz" => "array", "foo.baz.bat" => "bool", "foo.bar" => "string", "bar.baz" => "int"],
+            "foo.baz",
+            true,
+            null,
+            ["foo.baz.bat"],
+        ];
+        yield [
+            ["foo" => "array", "foo.baz" => "array", "foo.baz.bat" => "bool", "foo.bar" => "string", "bar.baz" => "int"],
+            "foo.bar",
+            true,
+            null,
+            [],
+        ];
+        yield [
+            ["foo" => "array", "foo.baz" => "array", "foo.baz.bat" => "bool", "foo.bar" => "string", "bar.baz" => "int"],
+            "bar",
+            true,
+            null,
+            ["bar.baz"],
+        ];
+        yield [
+            ["foo" => "array", "foo.baz" => "array", "foo.baz.bat" => "bool", "foo.bar" => "string", "bar.baz" => "int"],
+            "baz",
+            true,
+            null,
+            [],
+        ];
+        
+        yield [
+            ["foo" => "array", "foo.baz" => "array", "foo.baz.bat" => "bool", "foo.bar" => "string", "bar.baz" => "int"],
+            "foo",
+            false,
+            "array",
+            ["foo", "foo.baz", "foo.baz.bat", "foo.bar"],
+        ];
+        yield [
+            ["foo" => "array", "foo.baz" => "array", "foo.baz.bat" => "bool", "foo.bar" => "string", "bar.baz" => "int"],
+            "bar",
+            false,
+            "array",
+            ["bar", "bar.baz"],
+        ];
+        yield [
+            ["foo" => "array", "foo.baz" => "array", "foo.baz.bat" => "bool", "foo.bar" => "string", "bar.baz" => "int"],
+            "bar",
+            false,
+            null,
+            ["bar.baz"],
+        ];
+        yield [
+            ["foo" => "array", "foo.baz" => "array", "foo.baz.bat" => "bool", "foo.bar" => "string", "bar.baz" => "int"],
+            "baz",
+            false,
+            null,
+            [],
+        ];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider getDataName_List_with_DataNamePrefix_and_DataTypeDefinitionDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::getDataName_List_with_DataNamePrefix_and_DataTypeDefinition
+     *
+     * @param array       $arrDataType [ <DATA_NAME> => <DATA_TYPE>, ... ]
+     * @param string      $normalizedDataNamePrefix
+     * @param bool        $ignoreSelf
+     * @param string|null $normalizedDataNamePrefixDataType
+     * @param             $expectedValue
+     */
+    public function testGetDataName_List_with_DataNamePrefix_and_DataTypeDefinition(
+        array $arrDataType,
+        string $normalizedDataNamePrefix,
+        bool $ignoreSelf,
+        ?string $normalizedDataNamePrefixDataType,
+        $expectedValue
+    ) {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["getDataType_List", "getDataType"]
+        )->getMockForAbstractClass();
+        
+        $this->object->expects($this->once())->method("getDataType_List")->willReturn($arrDataType);
+        
+        if (!$ignoreSelf) {
+            $this->object->expects($this->once())->method("getDataType")->with(...[$normalizedDataNamePrefix])->willReturn($normalizedDataNamePrefixDataType);
+        } else {
+            $this->object->expects($this->never())->method("getDataType");
+        }
+        
+        
+        $this->assertSame(
+            $expectedValue, $this->invokeMethod(
+            $this->object, "getDataName_List_with_DataNamePrefix_and_DataTypeDefinition", $normalizedDataNamePrefix, $ignoreSelf)
+        );
     }
 }

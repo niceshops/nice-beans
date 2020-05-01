@@ -28,7 +28,15 @@ abstract class AbstractBaseBean implements BeanInterface, ArrayAccess, IteratorA
     
     
     const DATA_TYPE_CALLABLE = 'callable';
-    
+    const DATA_TYPE_STRING = 'string';
+    const DATA_TYPE_ARRAY = 'array';
+    const DATA_TYPE_INT = 'int';
+    const DATA_TYPE_FLOAT = 'float';
+    const DATA_TYPE_BOOL = 'bool';
+    const DATA_TYPE_ITERABLE = 'iterable';
+    const DATA_TYPE_DATE = 'date';
+    const DATA_TYPE_DATETIME_PHP = 'datetime';
+    const DATA_TYPE_OBJECT = 'object';
     
     /**
      * @var array
@@ -244,9 +252,9 @@ abstract class AbstractBaseBean implements BeanInterface, ArrayAccess, IteratorA
             $this->data[$name] = $value;
         }
 
-//        if ($dataType === self::DATA_TYPE_ARRAY && is_array($value)) {
-//            $this->normalizeDataValue_for_normalizedDataName($name);
-//        }
+        if ($dataType === self::DATA_TYPE_ARRAY && is_array($value)) {
+            $this->normalizeDataValue_for_normalizedDataName($name);
+        }
 //
 //        $this->touchData($name, $modified);
         
@@ -276,5 +284,101 @@ abstract class AbstractBaseBean implements BeanInterface, ArrayAccess, IteratorA
         
         return $value;
     }
+    
+    
+    /**
+     * @param string $normalizedDataName
+     *
+     * @return $this
+     * @throws BeanException
+     */
+    protected function normalizeDataValue_for_normalizedDataName(string $normalizedDataName)
+    {
+        $arrDataName_with_DataTypeDefinition = $this->getDataName_List_with_DataNamePrefix_and_DataTypeDefinition($normalizedDataName, true);
+        if (!$arrDataName_with_DataTypeDefinition) {
+            return $this;
+        }
+        
+        sort($arrDataName_with_DataTypeDefinition);
+        
+        foreach ($arrDataName_with_DataTypeDefinition as $dataName) {
+            $this->setData($dataName, $this->getData_with_DefaultValue($dataName));
+        }
+        
+        return $this;
+    }
+    
+    
+    /**
+     * @param string $name
+     *
+     * @return array|mixed|null
+     * @throws BeanException
+     */
+    protected function getData_with_DefaultValue(string $name)
+    {
+        if ($this->hasData($name)) {
+            $dataValue = $this->getData($name);
+        } elseif (null !== ($dataType = $this->getDataType($name))) {
+            $dataValue = $this->getDefaultValue_for_DataType($dataType);
+        } else {
+            $dataValue = null;
+        }
+        
+        return $dataValue;
+    }
+    
+    
+    /**
+     * @param string $dataType
+     *
+     * @return array|null
+     */
+    protected function getDefaultValue_for_DataType(string $dataType)
+    {
+        switch ($dataType) {
+            case self::DATA_TYPE_ARRAY:
+                $dataValue = [];
+                break;
+            
+            default:
+                $dataValue = null;
+        }
+        
+        return $dataValue;
+    }
+    
+    
+    /**
+     * @return array
+     */
+    protected function getDataType_List(): array
+    {
+        return $this->arrDataType;
+    }
+    
+    
+    /**
+     * @param string $normalizedDataNamePrefix
+     * @param bool   $ignoreSelf
+     *
+     * @return array
+     * @throws BeanException
+     */
+    protected function getDataName_List_with_DataNamePrefix_and_DataTypeDefinition(string $normalizedDataNamePrefix, bool $ignoreSelf = true)
+    {
+        $arrDataTypeName = array_filter(
+            array_keys($this->getDataType_List()), function ($key) use ($normalizedDataNamePrefix) {
+            return strpos($key, $normalizedDataNamePrefix . ".") === 0;
+        }
+        );
+        
+        if (!$ignoreSelf && $this->getDataType($normalizedDataNamePrefix)) {
+            array_unshift($arrDataTypeName, $normalizedDataNamePrefix);
+        }
+        
+        return array_values($arrDataTypeName);
+    }
+
     
 }
