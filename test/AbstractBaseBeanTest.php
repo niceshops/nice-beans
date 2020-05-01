@@ -884,4 +884,20 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $this->assertSame("bar", $this->object->removeData($name));
         $this->assertSame(["baz" => "bat"], $this->invokeGetProperty($this->object, "data"));
     }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::resetData
+     */
+    public function testResetData()
+    {
+        $arrData = ["foo" => "bar", "baz" => "bat"];
+        $this->invokeSetProperty($this->object, "data", $arrData);
+        
+        $this->assertSame($this->object, $this->object->resetData());
+        $this->assertSame([], $this->invokeGetProperty($this->object, "data"));
+    }
 }

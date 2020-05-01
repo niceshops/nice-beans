@@ -701,4 +701,21 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         
         return $removedData;
     }
+    
+    
+    /**
+     * @return $this
+     */
+    public function resetData()
+    {
+        //  @todo isFrozen check at FreezableBeanTrait
+        
+        //  @todo isSealed check at SealableBeanTrait
+        
+        $this->data = [];
+        
+        //  @todo reset modified meta data at AbstractModifiedBean     // $this->arrModified = [];
+        
+        return $this;
+    }
 }
