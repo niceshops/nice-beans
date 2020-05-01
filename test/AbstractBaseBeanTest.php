@@ -7,7 +7,9 @@ declare(strict_types=1);
 
 namespace NiceshopsDev\Bean;
 
+use ArrayObject;
 use Generator;
+use NiceshopsDev\Bean\BeanList\BeanListInterface;
 use NiceshopsDev\Bean\PHPUnit\DefaultTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
@@ -197,8 +199,8 @@ class AbstractBaseBeanTest extends DefaultTestCase
         
         $this->assertNull($this->invokeMethod($this->object, "getDataType", $name));
     }
-    
-    
+
+
 //    /**
 //     * @group  integration
 //     * @small
@@ -262,8 +264,10 @@ class AbstractBaseBeanTest extends DefaultTestCase
      * @param array $arrDataName_with_DataTypeDefinition_DefaultValue_Map [ <DATA_NAME> => <DEFAULT_VALUE>, ... ]
      * @param array $arrDataName_with_DataTypeDefinition_sorted
      */
-    public function testNormalizeDataValue_for_normalizedDataName(array $arrDataName_with_DataTypeDefinition_DefaultValue_Map, array $arrDataName_with_DataTypeDefinition_sorted)
-    {
+    public function testNormalizeDataValue_for_normalizedDataName(
+        array $arrDataName_with_DataTypeDefinition_DefaultValue_Map,
+        array $arrDataName_with_DataTypeDefinition_sorted
+    ) {
         $normalizedDataName = "foo";
         $arrDataName_with_DataTypeDefinition = array_keys($arrDataName_with_DataTypeDefinition_DefaultValue_Map);
         $arrSetData_Param = [];
@@ -281,7 +285,9 @@ class AbstractBaseBeanTest extends DefaultTestCase
             ["getDataName_List_with_DataNamePrefix_and_DataTypeDefinition", "setData", "getData_with_DefaultValue"]
         )->getMockForAbstractClass();
         
-        $this->object->expects($this->once())->method("getDataName_List_with_DataNamePrefix_and_DataTypeDefinition")->with(...[$normalizedDataName, true])->willReturn($arrDataName_with_DataTypeDefinition);
+        $this->object->expects($this->once())->method("getDataName_List_with_DataNamePrefix_and_DataTypeDefinition")->with(
+            ...[$normalizedDataName, true]
+        )->willReturn($arrDataName_with_DataTypeDefinition);
         
         if ($arrDataName_with_DataTypeDefinition) {
             $this->object->expects($this->exactly(count($arrDataName_with_DataTypeDefinition)))->method("getData_with_DefaultValue")->withConsecutive(
@@ -444,7 +450,7 @@ class AbstractBaseBeanTest extends DefaultTestCase
     
     
     /**
-     * @group unit
+     * @group  unit
      * @small
      *
      * @covers \NiceshopsDev\Bean\AbstractBaseBean::getDataType_List
@@ -564,7 +570,207 @@ class AbstractBaseBeanTest extends DefaultTestCase
         
         $this->assertSame(
             $expectedValue, $this->invokeMethod(
-            $this->object, "getDataName_List_with_DataNamePrefix_and_DataTypeDefinition", $normalizedDataNamePrefix, $ignoreSelf)
+            $this->object, "getDataName_List_with_DataNamePrefix_and_DataTypeDefinition", $normalizedDataNamePrefix, $ignoreSelf
+        )
         );
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getValueAtObjectKey
+     */
+    public function testGetValueAtObjectKey_BeanList_numericOffsetExists()
+    {
+        $beanList = $this->getMockBuilder(BeanListInterface::class)->setMethods(["offsetExists", "offsetGet"])->getMockForAbstractClass();
+        
+        $object = "bar";
+        $key = 0;
+        $found = true;
+        
+        $beanList->expects($this->once())->method("offsetExists")->with(...[$key])->willReturn(true);
+        $beanList->expects($this->once())->method("offsetGet")->with(...[$key])->willReturn($object);
+        
+        $this->assertSame([$object, $found], $this->invokeMethod($this->object, "getValueAtObjectKey", [$beanList, $key]));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getValueAtObjectKey
+     */
+    public function testGetValueAtObjectKey_BeanList_numericOffsetDoesNotExist()
+    {
+        $beanList = $this->getMockBuilder(BeanListInterface::class)->setMethods(["offsetExists"])->getMockForAbstractClass();
+        $key = 0;
+        $found = false;
+        
+        $beanList->expects($this->once())->method("offsetExists")->with(...[$key])->willReturn(false);
+        
+        $this->assertSame([null, $found], $this->invokeMethod($this->object, "getValueAtObjectKey", [$beanList, $key]));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getValueAtObjectKey
+     */
+    public function testGetValueAtObjectKey_BeanInterface_hasData()
+    {
+        $bean = $this->getMockBuilder(BeanInterface::class)->setMethods(["hasData", "getData"])->getMockForAbstractClass();
+        
+        $object = "bar";
+        $key = "foo";
+        $found = true;
+        
+        $bean->expects($this->once())->method("hasData")->with(...[$key])->willReturn(true);
+        $bean->expects($this->once())->method("getData")->with(...[$key])->willReturn($object);
+        
+        $this->assertSame([$object, $found], $this->invokeMethod($this->object, "getValueAtObjectKey", [$bean, $key]));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getValueAtObjectKey
+     */
+    public function testGetValueAtObjectKey_BeanInterface_doNotHasData()
+    {
+        $bean = $this->getMockBuilder(BeanInterface::class)->setMethods(["hasData", "getData"])->getMockForAbstractClass();
+        
+        $key = "foo";
+        $found = false;
+        
+        $bean->expects($this->once())->method("hasData")->with(...[$key])->willReturn(false);
+        
+        $this->assertSame([null, $found], $this->invokeMethod($this->object, "getValueAtObjectKey", [$bean, $key]));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getValueAtObjectKey
+     * @uses   \NiceshopsDev\NiceCore\Helper\Object\ObjectPropertyFinder
+     */
+    public function testGetValueAtObjectKey_utilize_ObjectPropertyFinder()
+    {
+        $object = ["foo" => "bar", "baz" => null];
+        
+        $this->assertSame(["bar", true], $this->invokeMethod($this->object, "getValueAtObjectKey", [$object, "foo"]));
+        $this->assertSame([null, true], $this->invokeMethod($this->object, "getValueAtObjectKey", [$object, "baz"]));
+        $this->assertSame([null, false], $this->invokeMethod($this->object, "getValueAtObjectKey", [$object, "bar"]));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getValueAtObjectKey
+     * @uses   \NiceshopsDev\NiceCore\Helper\Object\ObjectPropertyFinder
+     */
+    public function testGetValueAtObjectKey_utilize_ObjectPropertyFinder_withInvalidObject()
+    {
+        $object = "foo";
+        $this->assertSame([null, false], $this->invokeMethod($this->object, "getValueAtObjectKey", [$object, "foo"]));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getObjectKeys
+     */
+    public function testGetObjectKeys_fromArray()
+    {
+        $object = ["foo" => "bar", "baz" => null];
+        $this->assertSame(["foo", "baz"], $this->invokeMethod($this->object, "getObjectKeys", [$object]));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getObjectKeys
+     * @uses   \NiceshopsDev\NiceCore\Helper\Object\ObjectPropertyFinder
+     */
+    public function testGetObjectKeys_fromObject()
+    {
+        $object = (object)["foo" => "bar", "baz" => null];
+        $this->assertSame(["foo", "baz"], $this->invokeMethod($this->object, "getObjectKeys", [$object]));
+        
+        $object = new ArrayObject(["foo" => "bar", "baz" => null]);
+        $this->assertSame(["foo", "baz"], $this->invokeMethod($this->object, "getObjectKeys", [$object]));
+    }
+    
+    
+    /**
+     * @group unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getData
+     */
+    public function testGetData_NameNotFound()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["findData"])->getMockForAbstractClass();
+        $name = "foo";
+        $result = ["found" => false];
+        
+        $this->expectException(BeanException::class);
+        $this->expectExceptionCode(BeanException::ERROR_CODE_DATA_NOT_FOUND);
+        
+        $this->object->expects($this->once())->method("findData")->with(...[$name])->willReturn($result);
+        
+        $this->object->getData($name);
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getData
+     * @throws BeanException
+     */
+    public function testGetData_NameFoundButNoValue()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["findData"])->getMockForAbstractClass();
+        $name = "foo";
+        $result = ["found" => true];
+        
+        $this->object->expects($this->once())->method("findData")->with(...[$name])->willReturn($result);
+        
+        $this->assertNull($this->object->getData($name));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getData
+     * @throws BeanException
+     */
+    public function testGetData_ValueFound()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["findData"])->getMockForAbstractClass();
+        $name = "foo";
+        $result = ["found" => true, "value" => "bar"];
+        
+        $this->object->expects($this->once())->method("findData")->with(...[$name])->willReturn($result);
+        
+        $this->assertSame("bar", $this->object->getData($name));
     }
 }

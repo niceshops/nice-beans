@@ -13,6 +13,8 @@ use IteratorAggregate;
 use NiceshopsDev\Bean\BeanList\BeanListInterface;
 use NiceshopsDev\Bean\JsonSerializable\JsonSerializableInterface;
 use NiceshopsDev\Bean\JsonSerializable\JsonSerializableTrait;
+use NiceshopsDev\NiceCore\Exception;
+use NiceshopsDev\NiceCore\Helper\Object\ObjectPropertyFinder;
 use stdClass;
 
 /**
@@ -35,6 +37,8 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     const DATA_TYPE_DATE = 'date';
     const DATA_TYPE_DATETIME_PHP = 'datetime';
     const DATA_TYPE_OBJECT = 'object';
+    
+    const DATA_KEY_WILDCARD = "*";
     
     /**
      * @var array
@@ -249,11 +253,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         } else {
             $this->data[$name] = $value;
         }
-
+        
         if ($dataType === self::DATA_TYPE_ARRAY && is_array($value)) {
             $this->normalizeDataValue_for_normalizedDataName($name);
         }
-    
+        
         //  @todo hasDataModified check at AbstractModifiedBean     // $this->touchData($name, $modified);
         
         return $this;
@@ -376,6 +380,267 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         }
         
         return array_values($arrDataTypeName);
+    }
+    
+    
+    /**
+     * @param string $name
+     *
+     * @return mixed
+     * @throws BeanException if invalid name is defined or data could not found
+     * @todo should it possible to return values by reference?!?
+     */
+    public function getData($name)
+    {
+        $data = null;
+        
+        $result = $this->findData($name);
+        if (!$result["found"]) {
+            throw new BeanException(sprintf("Data '%s' not found!", $name), BeanException::ERROR_CODE_DATA_NOT_FOUND);
+        } else {
+            if (array_key_exists("value", $result)) {
+                $data = $result["value"];
+            }
+        }
+        
+        return $data;
+    }
+    
+    
+    /**
+     * Return an array with the following properties
+     * - found          TRUE or FALSE
+     * - context        where data was found or NULL
+     * - key            context key where data was found or NULL
+     * - value          found value at context<<KEY>>
+     *
+     * @param      $name
+     * @param bool $ignoreWildcards
+     *
+     * @return array
+     * @throws BeanException
+     * @todo Refactore handling wildcard names  (e.g.: foo.*)
+     * @todo Refactore handling dot-notation names
+     * @todo UnitTests
+     */
+    protected function findData($name, $ignoreWildcards = false)
+    {
+        $normalizedName = $this->normalizeDataName($name);
+        $flag = array_key_exists($normalizedName, $this->data);
+        $value = $contextName = null;
+        $context = null;
+        
+        if (!$flag) {
+            if ($name === self::DATA_KEY_WILDCARD) {
+                $flag = true;
+                $value = $this->toArray();
+            } elseif (!$ignoreWildcards && strpos($name, self::DATA_KEY_WILDCARD) !== false) {
+                $arrFound = $this->findData($name, true);
+                if ($arrFound["found"]) {
+                    return $arrFound;
+                }
+                
+                $arrSearchName = [$name];
+                $searchNameWithWildcardsCount = 1;
+                $killer = 0;
+                
+                
+                while ($searchNameWithWildcardsCount >= 1 && $killer < 100) {
+                    ++$killer;
+                    
+                    foreach ($arrSearchName as $searchNameKey => $searchName) {
+                        if (is_array($searchName)) {
+                            continue;
+                        }
+                        
+                        $context = $this->data;
+                        $arrName = array_values(array_map("trim", explode(".", $searchName)));
+                        
+                        if (in_array(self::DATA_KEY_WILDCARD, $arrName)) {
+                            $arrFound = $this->findData($searchName, true);
+                            if ($arrFound["found"]) {
+                                --$searchNameWithWildcardsCount;
+                                $arrSearchName[$searchNameKey] = $arrFound;
+                                continue;
+                            }
+                        }
+                        
+                        foreach ($arrName as $nameKey => $nameVal) {
+                            if ($nameVal === self::DATA_KEY_WILDCARD) {
+                                $arrKey = $this->getObjectKeys($context);
+                                --$searchNameWithWildcardsCount;
+                                unset($arrSearchName[$searchNameKey]);
+                                
+                                
+                                foreach ($arrKey as $key) {
+                                    $newSearchName = $arrName;
+                                    array_splice($newSearchName, $nameKey, 1, $key);
+                                    $newSearchName = implode(".", $newSearchName);
+                                    
+                                    if ($key === self::DATA_KEY_WILDCARD) {
+                                        $arrFound = $this->findData($newSearchName, true);
+                                        if ($arrFound["found"]) {
+                                            $arrSearchName[] = $arrFound;
+                                        }
+                                        continue;
+                                    }
+                                    
+                                    if (strpos($newSearchName, self::DATA_KEY_WILDCARD) !== false) {
+                                        ++$searchNameWithWildcardsCount;
+                                    }
+                                    $arrSearchName[] = $newSearchName;
+                                }
+                                break;
+                            }
+                            
+                            list($context, $contextFound) = $this->getValueAtObjectKey($context, $nameVal);
+                            if (!$contextFound) {
+                                --$searchNameWithWildcardsCount;
+                                unset($arrSearchName[$searchNameKey]);
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (!$flag) {
+                    $value = [];
+                    foreach ($arrSearchName as $searchName) {
+                        if (is_array($searchName)) {
+                            if (array_key_exists("value", $searchName)) {
+                                $value[] = $searchName["value"];
+                            }
+                        } else {
+                            $arrFound = $this->findData($searchName, true);
+                            if ($arrFound["found"]) {
+                                $value[] = $arrFound["value"];
+                            }
+                        }
+                    }
+                    
+                    if (count($value) > 0) {
+                        $flag = true;
+                    }
+                }
+            } elseif (strpos($name, ".") >= 1) {
+                $arrName = array_values(array_map("trim", explode(".", $name)));
+                
+                if (!array_key_exists($this->normalizeDataName($arrName[0]), $this->data)) {
+                    $dataType = $this->getDataType($arrName[0]);
+                    if ($dataType) {
+                        $value = $this->getDefaultValue_for_DataType($dataType) ?? $value;
+                    }
+                    if (is_callable($value)) {
+                        $value = call_user_func($value, $arrName[0]);
+                    }
+                    
+                    $this->setData($arrName[0], $value);
+                }
+                
+                $context = $this->data;
+                
+                $deep = 1;
+                while ($deep < 100 && count($arrName) && $context) {
+                    $contextName = array_shift($arrName);
+                    if ($deep == 1) {
+                        $contextName = $this->normalizeDataName($contextName);
+                    }
+                    
+                    $oldContext = $context;
+                    list($context, $contextFound) = $this->getValueAtObjectKey($context, $contextName);
+                    if ($contextFound && !$arrName) {
+                        $flag = true;
+                    }
+                    
+                    if (!$arrName) {
+                        $value = $context;
+                        $context = $oldContext;
+                    } else {
+                        if (is_scalar($context)) {
+                            $context = null;
+                        }
+                    }
+                    
+                    ++$deep;
+                }
+            }
+        } else {
+            $contextName = $normalizedName;
+            $context = $this->data;
+            $value = $this->data[$normalizedName];
+        }
+        
+        return [
+            "found" => $flag,
+            "key" => $flag ? $contextName : null,
+            "value" => $flag ? $value : null,
+            "context" => $flag ? $context : null,
+        ];
+    }
+    
+    
+    /**
+     * @param $object
+     *
+     * @return array
+     */
+    protected function getObjectKeys($object): array
+    {
+        $arrKey = [];
+        
+        try {
+            if (is_array($object)) {
+                $arrKey = ObjectPropertyFinder::createFromArray($object)->getKeys();
+            } elseif (is_object($object)) {
+                $arrKey = ObjectPropertyFinder::createFromObject($object)->getKeys();
+            }
+        } catch (Exception $e) {
+        }
+        
+        return $arrKey;
+    }
+    
+    
+    /**
+     * @param $object
+     * @param $key
+     *
+     * @return array    [ <VALUE>, (bool)<KEY_FOUND> ]
+     */
+    protected function getValueAtObjectKey($object, $key): array
+    {
+        $found = false;
+        
+        if (($object instanceof BeanInterface)) {
+            if ($object instanceof BeanListInterface && (string)(int)$key === (string)$key) {
+                if ($object->offsetExists($key)) {
+                    $object = $object->offsetGet($key);
+                    $found = true;
+                } else {
+                    $object = null;
+                }
+            } elseif ($object->hasData($key)) {
+                $object = $object->getData($key);
+                $found = true;
+            } else {
+                $object = null;
+            }
+        } else {
+            try {
+                $finder = new ObjectPropertyFinder($object);
+            } catch (Exception $e) {
+                $finder = null;
+            }
+            
+            if ($finder) {
+                $found = $finder->hasKey($key);
+                $object = $finder->getValue($key);
+            } else {
+                $object = null;
+            }
+        }
+        
+        return [$object, $found];
     }
     
 }
