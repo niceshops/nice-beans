@@ -718,4 +718,25 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         
         return $this;
     }
+    
+    
+    /**
+     * @param bool $useOrigDataNames
+     *
+     * @return array
+     * @todo UnitTests
+     */
+    public function toArray($useOrigDataNames = true)
+    {
+        if (!$useOrigDataNames) {
+            return $this->data;
+        }
+        
+        $arrData = [];
+        foreach ($this->data as $name => $value) {
+            $arrData[$this->getOriginalDataName($name)] = $value;
+        }
+        
+        return $arrData;
+    }
 }
