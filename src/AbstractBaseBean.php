@@ -255,8 +255,8 @@ abstract class AbstractBaseBean implements BeanInterface, ArrayAccess, IteratorA
         if ($dataType === self::DATA_TYPE_ARRAY && is_array($value)) {
             $this->normalizeDataValue_for_normalizedDataName($name);
         }
-//
-//        $this->touchData($name, $modified);
+    
+        //  @todo hasDataModified check at AbstractModifiedBean     // $this->touchData($name, $modified);
         
         return $this;
     }
@@ -379,6 +379,5 @@ abstract class AbstractBaseBean implements BeanInterface, ArrayAccess, IteratorA
         
         return array_values($arrDataTypeName);
     }
-
     
 }
