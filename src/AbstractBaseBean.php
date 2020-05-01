@@ -643,4 +643,18 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         return [$object, $found];
     }
     
+    
+    /**
+     * @param string $name
+     *
+     * @return bool
+     * @throws BeanException
+     */
+    public function hasData($name)
+    {
+        $result = $this->findData($name);
+        
+        return (bool)$result["found"];
+    }
+    
 }

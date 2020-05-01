@@ -773,4 +773,42 @@ class AbstractBaseBeanTest extends DefaultTestCase
         
         $this->assertSame("bar", $this->object->getData($name));
     }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::hasData
+     * @throws BeanException
+     */
+    public function testHasData_isTrue()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["findData"])->getMockForAbstractClass();
+        $name = "foo";
+        $result = ["found" => true];
+        
+        $this->object->expects($this->once())->method("findData")->with(...[$name])->willReturn($result);
+        
+        $this->assertTrue($this->object->hasData($name));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::hasData
+     * @throws BeanException
+     */
+    public function testHasData_isFalse()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["findData"])->getMockForAbstractClass();
+        $name = "foo";
+        $result = ["found" => false];
+        
+        $this->object->expects($this->once())->method("findData")->with(...[$name])->willReturn($result);
+        
+        $this->assertFalse($this->object->hasData($name));
+    }
 }
