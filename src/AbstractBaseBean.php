@@ -8,9 +8,7 @@ declare(strict_types=1);
 namespace NiceshopsDev\Bean;
 
 
-use ArrayAccess;
 use ArrayObject;
-use Countable;
 use IteratorAggregate;
 use NiceshopsDev\Bean\BeanList\BeanListInterface;
 use NiceshopsDev\Bean\JsonSerializable\JsonSerializableInterface;
@@ -21,7 +19,7 @@ use stdClass;
  * Class AbstractBaseBean
  * @package NiceshopsDev\Bean
  */
-abstract class AbstractBaseBean implements BeanInterface, ArrayAccess, IteratorAggregate, Countable, JsonSerializableInterface
+abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, JsonSerializableInterface
 {
     
     use JsonSerializableTrait;

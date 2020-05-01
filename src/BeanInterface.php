@@ -7,13 +7,15 @@ declare(strict_types=1);
 
 namespace NiceshopsDev\Bean;
 
+use ArrayAccess;
+use Countable;
 use Serializable;
 
 /**
  * Interface BeanInterface
  * @package Niceshops\Library\Core\Bean
  */
-interface BeanInterface extends Serializable
+interface BeanInterface extends Serializable, ArrayAccess, Countable
 {
     
     
