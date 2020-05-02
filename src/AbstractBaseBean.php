@@ -687,7 +687,30 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 );
             }
         }
-        
+    
+        return $value;
+    }
+    
+    
+    /**
+     * @param $value
+     *
+     * @return object
+     * @throws BeanException
+     */
+    protected function normalizeDataValue_object($value): object
+    {
+        if (is_scalar($value) || is_null($value) || is_resource($value)) {
+            $origValue = $value;
+            throw new BeanException(
+                sprintf("Invalid value '%s' for data type 'object'!", is_scalar($origValue) ? (string)$origValue : "NOT_A_SCALAR_VALUE"),
+                BeanException::ERROR_CODE_INVALID_DATA_VALUE
+            );
+        } else {
+            if (!is_object($value)) {
+                $value = (object)$value;
+            }
+        }
         return $value;
     }
     

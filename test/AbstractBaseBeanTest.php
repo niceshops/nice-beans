@@ -17,6 +17,7 @@ use IteratorAggregate;
 use NiceshopsDev\Bean\BeanList\BeanListInterface;
 use NiceshopsDev\Bean\PHPUnit\DefaultTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
+use stdClass;
 
 /**
  * Class AbstractBaseBeanTest
@@ -1425,5 +1426,58 @@ class AbstractBaseBeanTest extends DefaultTestCase
          */
         $actualValue = $this->invokeMethod($this->object, "normalizeDataValue_datetime", [$value]);
         $this->assertSame($expectedValue->getTimestamp(), $actualValue->getTimestamp());
+    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function normalizeDataValue_objectDataProvider()
+    {
+        $obj = (object)["foo" => "bar"];
+        $arrObj = new ArrayObject(["foo" => "bar"]);
+        $tmpFile = tmpfile();
+        
+        yield [$obj, $obj];
+        yield [$arrObj, $arrObj];
+        yield [["foo" => "bar"], $obj];
+        
+        yield [null, $obj, true];
+        yield [true, $obj, true];
+        yield [false, $obj, true];
+        yield ["foo", $obj, true];
+        yield [100, $obj, true];
+        yield [$tmpFile, (object)$tmpFile, true];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider normalizeDataValue_objectDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue_object
+     *
+     * @param                   $value
+     * @param object            $expectedValue
+     * @param bool              $error
+     */
+    public function testNormalizeDataValue_object($value, object $expectedValue, bool $error = false)
+    {
+        if ($error) {
+            $this->expectException(BeanException::class);
+            $this->expectExceptionCode(BeanException::ERROR_CODE_INVALID_DATA_VALUE);
+        }
+        
+        $actualValue = $this->invokeMethod($this->object, "normalizeDataValue_object", [$value]);
+        
+        if ($actualValue instanceof stdClass) {
+            $actualValue = (array)$actualValue;
+        }
+        if ($expectedValue instanceof stdClass) {
+            $expectedValue = (array)$expectedValue;
+        }
+        $this->assertSame($expectedValue, $actualValue);
     }
 }
