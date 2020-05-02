@@ -18,4 +18,5 @@ class BeanException extends Exception
 
     
     const ERROR_CODE_DATA_NOT_FOUND = 1000;
+    const ERROR_CODE_INVALID_DATA_VALUE = 1001;
 }

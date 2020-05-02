@@ -447,11 +447,32 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     
     
     /**
+     * @param string $dataType
+     *
+     * @return string
+     * @todo handle further supported data types
+     * @todo UnitTests
+     */
+    protected function normalizeDataType(string $dataType): string
+    {
+        $dataType = strtolower(trim($dataType));
+        switch ($dataType) {
+            case "bool":
+            case self::DATA_TYPE_BOOL:
+                $dataType = "boolean";
+                break;
+        }
+        
+        return $dataType;
+    }
+    
+    
+    /**
      * @param mixed  $value
      * @param string $dataType
      *
      * @return mixed
-     * @todo implement method
+     * @todo implement helper methods for supported data types
      */
     protected function normalizeDataValue($value, string $dataType = null)
     {
@@ -460,10 +481,30 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         }
         
         if (null !== $dataType) {
-            switch ($dataType) {
-                default:
-                    break;
+            $dataType = $this->normalizeDataType($dataType);
+            
+            $normalizeMethodName = "normalizeDataValue_" . $dataType;
+            if (method_exists($this, $normalizeMethodName)) {
+                return call_user_func([$this, $normalizeMethodName], $value);
             }
+        }
+        
+        return $value;
+    }
+    
+    
+    /**
+     * @param $value
+     *
+     * @return mixed
+     * @throws BeanException
+     */
+    protected function normalizeDataValue_boolean($value)
+    {
+        $origValue = $value;
+        $value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        if (is_null($value)) {
+            throw new BeanException(sprintf("Invalid value '%s' for data type 'boolean'!", is_scalar($origValue) ? (string)$origValue : "NOT_A_SCALAR_VALUE"), BeanException::ERROR_CODE_INVALID_DATA_VALUE);
         }
         
         return $value;

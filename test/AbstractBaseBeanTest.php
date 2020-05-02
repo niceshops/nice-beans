@@ -1015,4 +1015,79 @@ class AbstractBaseBeanTest extends DefaultTestCase
         
         $this->assertSame($this->object, $this->object->setFromArray($arrData, $arrName));
     }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue
+     */
+    public function testNormalizeDataValue_normalizeMethodExists()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["normalizeDataType", "normalizeDataValue_boolean"]
+        )->getMockForAbstractClass();
+        
+        $value = "foo";
+        $normalizedValue = "bar";
+        
+        $this->object->expects($this->once())->method("normalizeDataType")->with(...[AbstractBaseBean::DATA_TYPE_BOOL])->willReturn("boolean");
+        $this->object->expects($this->once())->method("normalizeDataValue_boolean")->with(...[$value])->willReturn($normalizedValue);
+        
+        $this->assertSame($normalizedValue, $this->invokeMethod($this->object, "normalizeDataValue", [$value, AbstractBaseBean::DATA_TYPE_BOOL]));
+    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function normalizeDataValue_booleanDataProvider()
+    {
+        yield [true, true];
+        yield [1, true];
+        yield [1.0, true];
+        yield ["1", true];
+        yield ["true", true];
+        yield ["TRUE", true];
+        
+        yield [false, false];
+        yield [0, false];
+        yield [0.0, false];
+        yield ["0", false];
+        yield ["false", false];
+        yield ["FALSE", false];
+        yield ["", false];
+        yield [" ", false];
+        yield [null, false];
+    
+        yield ["foo", false, true];
+        yield ["NULL", false, true];
+        yield [[], false, true];
+        yield [-1, false, true];
+        yield [1.01, false, true];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider normalizeDataValue_booleanDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue_boolean
+     *
+     * @param      $value
+     * @param bool $expectedValue
+     * @param bool $error
+     */
+    public function testNormalizeDataValue_boolean($value, bool $expectedValue, bool $error = false)
+    {
+        if ($error) {
+            $this->expectException(BeanException::class);
+            $this->expectExceptionCode(BeanException::ERROR_CODE_INVALID_DATA_VALUE);
+        }
+        
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "normalizeDataValue_boolean", [$value]));
+    }
 }
