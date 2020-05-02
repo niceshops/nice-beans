@@ -900,4 +900,68 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $this->assertSame($this->object, $this->object->resetData());
         $this->assertSame([], $this->invokeGetProperty($this->object, "data"));
     }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::toArray
+     */
+    public function testToArray_doNotUseOrigDataNames()
+    {
+        $arrData = ["foo" => "bar", "bar" => new ArrayObject(["name" => "foo"])];
+        $this->invokeSetProperty($this->object, "data", $arrData);
+        
+        $this->assertSame($arrData, $this->object->toArray(false));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::toArray
+     */
+    public function testToArray_useOrigDataNames_butNoData()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["getOriginalDataName"]
+        )->getMockForAbstractClass();
+        $arrData = [];
+        $arrExpected = [];
+        $this->invokeSetProperty($this->object, "data", $arrData);
+        $this->object->expects($this->never())->method("getOriginalDataName");
+        
+        $this->assertSame($arrExpected, $this->object->toArray(true));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::toArray
+     */
+    public function testToArray_useOrigDataNames()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["getOriginalDataName"]
+        )->getMockForAbstractClass();
+        $arrData = ["foo" => "bar", "baz" => new ArrayObject(["name" => "foo"])];
+        $arrExpected = ["Foo" => "bar", "BAZ" => $arrData["baz"]];
+        $arrName_Map = ["foo" => "Foo", "baz" => "BAZ"];
+        $arrGetOriginalDataName_Param = $arrGetOriginalDataName_Return = [];
+        foreach ($arrData as $key => $val) {
+            $arrGetOriginalDataName_Param[] = [$key];
+            $arrGetOriginalDataName_Return[] = $arrName_Map[$key];
+        }
+        
+        $this->invokeSetProperty($this->object, "data", $arrData);
+        $this->object->expects($this->exactly(count($arrData)))->method("getOriginalDataName")->withConsecutive(...$arrGetOriginalDataName_Param)->willReturn(
+            ...$arrGetOriginalDataName_Return
+        );
+        
+        $this->assertSame($arrExpected, $this->object->toArray(true));
+    }
 }
