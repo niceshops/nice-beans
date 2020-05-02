@@ -9,6 +9,9 @@ namespace NiceshopsDev\Bean;
 
 use ArrayIterator;
 use ArrayObject;
+use DateTime;
+use DateTimeImmutable;
+use DateTimeInterface;
 use Generator;
 use IteratorAggregate;
 use NiceshopsDev\Bean\BeanList\BeanListInterface;
@@ -1376,5 +1379,51 @@ class AbstractBaseBeanTest extends DefaultTestCase
         }
         
         $this->assertSame($expectedValue, $this->invokeMethod($this->object, "normalizeDataValue_iterable", [$value]));
+    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function normalizeDataValue_datetimeDataProvider()
+    {
+        $dateTime = new DateTime();
+        $dateTimeImmutable = new DateTimeImmutable();
+        $timestamp = time();
+        
+        yield [$dateTime, $dateTime];
+        yield [$dateTimeImmutable, $dateTimeImmutable];
+        yield ["2020-05-02 20:22:48", DateTime::createFromFormat('Y-m-d H:i:s', "2020-05-02 20:22:48")];
+        yield [$timestamp, $dateTime->setTimestamp($timestamp)];
+        yield ["$timestamp", $dateTime->setTimestamp($timestamp)];
+        yield ["foo", $dateTime, true];
+        yield [[$timestamp], $dateTime, true];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider normalizeDataValue_datetimeDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue_datetime
+     *
+     * @param                   $value
+     * @param DateTimeInterface $expectedValue
+     * @param bool              $error
+     */
+    public function testNormalizeDataValue_datetime($value, DateTimeInterface $expectedValue, bool $error = false)
+    {
+        if ($error) {
+            $this->expectException(BeanException::class);
+            $this->expectExceptionCode(BeanException::ERROR_CODE_INVALID_DATA_VALUE);
+        }
+        
+        /**
+         * @var DateTimeInterface $actualValue
+         */
+        $actualValue = $this->invokeMethod($this->object, "normalizeDataValue_datetime", [$value]);
+        $this->assertSame($expectedValue->getTimestamp(), $actualValue->getTimestamp());
     }
 }

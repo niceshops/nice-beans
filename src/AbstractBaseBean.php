@@ -9,6 +9,8 @@ namespace NiceshopsDev\Bean;
 
 
 use ArrayObject;
+use DateTime;
+use DateTimeInterface;
 use IteratorAggregate;
 use NiceshopsDev\Bean\BeanList\BeanListInterface;
 use NiceshopsDev\Bean\JsonSerializable\JsonSerializableInterface;
@@ -476,6 +478,10 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             case "arr":
                 $dataType = self::DATA_TYPE_ARRAY;
                 break;
+    
+            case self::DATA_TYPE_DATE;
+                $dataType = self::DATA_TYPE_DATETIME_PHP;
+                break;
         }
         
         return $dataType;
@@ -643,6 +649,41 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             } else {
                 throw new BeanException(
                     "Invalid value for data type 'iterable'!", BeanException::ERROR_CODE_INVALID_DATA_VALUE
+                );
+            }
+        }
+        
+        return $value;
+    }
+    
+    
+    /**
+     * @param $value
+     *
+     * @return DateTimeInterface
+     * @throws BeanException
+     */
+    protected function normalizeDataValue_datetime($value): DateTimeInterface
+    {
+        if (!($value instanceof DateTimeInterface)) {
+            $origValue = $value;
+            if (is_numeric($value)) {
+                $value = new DateTime();
+                $value->setTimestamp(intval($origValue));
+            } elseif (is_string($value)) {
+                try {
+                    $value = DateTime::createFromFormat('Y-m-d H:i:s', $value);
+                    if (false === $value) {
+                        throw new BeanException("Invalid time string");
+                    }
+                } catch (Exception $e) {
+                    throw new BeanException(
+                        sprintf("Invalid value '%s' for data type 'datetime' - %s!", $origValue, $e->getMessage()), BeanException::ERROR_CODE_INVALID_DATA_VALUE
+                    );
+                }
+            } else {
+                throw new BeanException(
+                    sprintf("Invalid value '%s' for data type 'datetime'!", is_scalar($origValue) ? (string)$origValue : "NOT_A_SCALAR_VALUE"), BeanException::ERROR_CODE_INVALID_DATA_VALUE
                 );
             }
         }
