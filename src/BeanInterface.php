@@ -68,12 +68,6 @@ interface BeanInterface extends Serializable, ArrayAccess, Countable
     
     
     /**
-     * @return array
-     */
-    function toArrayRecursive();
-    
-    
-    /**
      * @param array $data
      *
      * @return mixed
