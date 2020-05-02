@@ -964,4 +964,55 @@ class AbstractBaseBeanTest extends DefaultTestCase
         
         $this->assertSame($arrExpected, $this->object->toArray(true));
     }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function setFromArrayDataProvider()
+    {
+        yield [[], null, []];
+        yield [["foo" => "bar", "baz" => "bat"], null, ["foo" => "bar", "baz" => "bat"]];
+        yield [[" foo " => "bar", "baz" => "bat"], null, ["foo" => "bar", "baz" => "bat"]];
+        yield [["foo" => "bar", "baz" => "bat"], ["foo"], ["foo" => "bar"]];
+        yield [[" foo " => "bar", "baz" => "bat"], ["foo"], ["foo" => "bar"]];
+        yield [["foo" => "bar", "baz" => "bat"], [" foo "], ["foo" => "bar"]];
+        yield [["foo" => "bar", "baz" => "bat"], ["Foo"], []];
+        yield [["foo" => "bar", "baz" => "bat"], ["bar"], []];
+        yield [["foo" => ["bar" => "baz"]], ["foo.bar"], ["foo.bar" => "baz"]];
+        yield [["foo" => ["bar" => null]], ["foo.bar"], ["foo.bar" => null]];
+        yield [["foo" => ["bar" => null]], ["foo.Bar"], []];
+        yield [["foo" => (object)["bar" => new ArrayObject(["baz" => "bat"])]], ["foo.bar.baz"], ["foo.bar.baz" => "bat"]];
+        yield [["foo" => "bar"], ["foo.bar.baz"], []];
+        yield [["foo.bar" => "baz"], ["foo.bar"], ["foo.bar" => "baz"]];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider setFromArrayDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::setFromArray
+     *
+     * @param array      $arrData         [ "<NAME>" => <VALUE>, ... ]
+     * @param array|null $arrName         [ "<NAME>", ... ]
+     * @param array      $arrExpectedData [ "<NAME>" => <VALUE>, ... ]
+     *
+     * @throws BeanException
+     */
+    public function testSetFromArray(array $arrData, ?array $arrName, array $arrExpectedData)
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["setData"])->getMockForAbstractClass();
+        $arrSetData_Param = [];
+        
+        foreach ($arrExpectedData as $name => $value) {
+            $arrSetData_Param[] = [$name, $value];
+        }
+        
+        $this->object->expects($this->exactly(count($arrExpectedData)))->method("setData")->withConsecutive(...$arrSetData_Param);
+        
+        $this->assertSame($this->object, $this->object->setFromArray($arrData, $arrName));
+    }
 }

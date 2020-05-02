@@ -266,6 +266,67 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     
     
     /**
+     * NOTE: existing data will be overwritten (to merge data use "mergeWithData")
+     * NOTE: there will be no data reset applied before setting the passed data (a data reset has to be done explicitly with "resetData")
+     *
+     * @param array      $arrData [ "<NAME>" => <VALUE>, ... ]
+     * @param array|null $arrName [ "<NAME>", ... ]     <NAME> can also reference to nested data at the passed data with dot-notation syntax (e.g. "foo.bar.baz")
+     *
+     * @return $this|mixed
+     * @throws BeanException
+     * @see AbstractBaseBean::mergeWithData()
+     * @see AbstractBaseBean::resetData()
+     *
+     */
+    public function setFromArray(array $arrData, array $arrName = null)
+    {
+        $arrData = array_combine(array_map("trim", array_keys($arrData)), $arrData);
+        if ($arrName) {
+            $arrName = array_map("trim", $arrName);
+            foreach ($arrName as $key => $name) {
+                if (array_key_exists($name, $arrData)) {
+                    continue;
+                }
+                
+                if (strpos($name, ".") < 1) {
+                    continue;
+                }
+                
+                $arrNamePart = explode(".", $name);
+                $context = $arrData;
+                $dataFound = true;
+                foreach ($arrNamePart as $namePart) {
+                    try {
+                        $finder = new ObjectPropertyFinder($context);
+                    } catch (Exception $e) {
+                        $dataFound = false;
+                        break;
+                    }
+                    if (!$finder->hasKey($namePart)) {
+                        $dataFound = false;
+                        break;
+                    }
+                    
+                    $context = $finder->getValue($namePart);
+                }
+                if ($dataFound) {
+                    $arrData[$name] = $context;
+                } else {
+                    unset($arrName[$key]);
+                }
+            }
+            $arrData = array_intersect_key($arrData, array_flip($arrName));
+        }
+        
+        foreach ($arrData as $name => $value) {
+            $this->setData($name, $value);
+        }
+        
+        return $this;
+    }
+    
+    
+    /**
      * @param $name
      *
      * @return string
