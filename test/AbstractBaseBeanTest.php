@@ -7,8 +7,10 @@ declare(strict_types=1);
 
 namespace NiceshopsDev\Bean;
 
+use ArrayIterator;
 use ArrayObject;
 use Generator;
+use IteratorAggregate;
 use NiceshopsDev\Bean\BeanList\BeanListInterface;
 use NiceshopsDev\Bean\PHPUnit\DefaultTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -1042,7 +1044,7 @@ class AbstractBaseBeanTest extends DefaultTestCase
     /**
      * @return Generator
      */
-    public function normalizeDataValue_booleanDataProvider()
+    public function normalizeDataValue_boolDataProvider()
     {
         yield [true, true];
         yield [1, true];
@@ -1050,6 +1052,8 @@ class AbstractBaseBeanTest extends DefaultTestCase
         yield ["1", true];
         yield ["true", true];
         yield ["TRUE", true];
+        yield ["on", true];
+        yield ["yes", true];
         
         yield [false, false];
         yield [0, false];
@@ -1057,6 +1061,8 @@ class AbstractBaseBeanTest extends DefaultTestCase
         yield ["0", false];
         yield ["false", false];
         yield ["FALSE", false];
+        yield ["off", false];
+        yield ["no", false];
         yield ["", false];
         yield [" ", false];
         yield [null, false];
@@ -1073,21 +1079,302 @@ class AbstractBaseBeanTest extends DefaultTestCase
      * @group        unit
      * @small
      *
-     * @dataProvider normalizeDataValue_booleanDataProvider
+     * @dataProvider normalizeDataValue_boolDataProvider
      *
-     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue_boolean
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue_bool
      *
      * @param      $value
      * @param bool $expectedValue
      * @param bool $error
      */
-    public function testNormalizeDataValue_boolean($value, bool $expectedValue, bool $error = false)
+    public function testNormalizeDataValue_bool($value, bool $expectedValue, bool $error = false)
     {
         if ($error) {
             $this->expectException(BeanException::class);
             $this->expectExceptionCode(BeanException::ERROR_CODE_INVALID_DATA_VALUE);
         }
         
-        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "normalizeDataValue_boolean", [$value]));
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "normalizeDataValue_bool", [$value]));
+    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function normalizeDataValue_intDataProvider()
+    {
+        yield [0, 0];
+        yield [10, 10];
+        yield [-10, -10];
+        yield [10.5, 10];
+        yield ["0", 0];
+        yield ["10", 10];
+        yield ["-10", -10];
+        yield ["10.5", 10];
+        yield ["1,000", 1000, true];
+        yield ["1,000.5", 10005, true];
+        
+        yield [1e2, 100];
+        yield ["1e2", 100];
+        yield [.5, 0];
+        yield [".5", 0];
+        
+        yield ["10foo", 10, true];
+        yield ["foo10", 10, true];
+        
+        yield [null, 0, true];
+        yield [true, 1, true];
+        yield [false, 0, true];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider normalizeDataValue_intDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue_int
+     *
+     * @param      $value
+     * @param int  $expectedValue
+     * @param bool $error
+     */
+    public function testNormalizeDataValue_int($value, int $expectedValue, bool $error = false)
+    {
+        if ($error) {
+            $this->expectException(BeanException::class);
+            $this->expectExceptionCode(BeanException::ERROR_CODE_INVALID_DATA_VALUE);
+        }
+        
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "normalizeDataValue_int", [$value]));
+    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function normalizeDataValue_floatDataProvider()
+    {
+        yield [0, 0.0];
+        yield [10, 10.0];
+        yield [.5, 0.5];
+        yield [10.5, 10.5];
+        yield [-.5, -0.5];
+        yield [-10.5, -10.5];
+        
+        yield ["0", 0.0];
+        yield ["10", 10.0];
+        yield [".5", 0.5];
+        yield ["10.5", 10.5];
+        yield ["-.5", -0.5];
+        yield ["-10.5", -10.5];
+        
+        yield ["1,000", 1000];
+        yield ["1,000.5", 1000.5];
+        yield ["1.000", 1.0];
+        yield [1e2, 100.0];
+        yield ["1e2", 100.0];
+        
+        yield ["10foo", 10, true];
+        yield ["foo10", 10, true];
+        
+        yield [null, 0, true];
+        yield [true, 1, true];
+        yield [false, 0, true];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider normalizeDataValue_floatDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue_float
+     *
+     * @param       $value
+     * @param float $expectedValue
+     * @param bool  $error
+     */
+    public function testNormalizeDataValue_float($value, float $expectedValue, bool $error = false)
+    {
+        if ($error) {
+            $this->expectException(BeanException::class);
+            $this->expectExceptionCode(BeanException::ERROR_CODE_INVALID_DATA_VALUE);
+        }
+        
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "normalizeDataValue_float", [$value]));
+    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function normalizeDataValue_stringDataProvider()
+    {
+        $fooObj = new class {
+            function __toString(): string
+            {
+                return "foo";
+            }
+        };
+
+        yield ["foo", "foo"];
+        yield ["", ""];
+        yield [" ", " "];
+        yield [100, "100"];
+        yield [100.99, "100.99"];
+        yield [-100, "-100"];
+        yield [$fooObj, "foo"];
+        
+        yield [null, ""];
+        yield [true, "1"];
+        yield [false, ""];
+        
+        yield [[], "", true];
+        yield [(object)[], "", true];
+        yield [new ArrayObject(["foo" => "bar"]), "bar", true];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider normalizeDataValue_stringDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue_string
+     *
+     * @param       $value
+     * @param string $expectedValue
+     * @param bool  $error
+     */
+    public function testNormalizeDataValue_string($value, string $expectedValue, bool $error = false)
+    {
+        if ($error) {
+            $this->expectException(BeanException::class);
+            $this->expectExceptionCode(BeanException::ERROR_CODE_INVALID_DATA_VALUE);
+        }
+        
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "normalizeDataValue_string", [$value]));
+    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function normalizeDataValue_arrayDataProvider()
+    {
+        $fooObj = new class {
+            function toArray(): array
+            {
+                return ["foo"];
+            }
+        };
+    
+        yield [[], []];
+        yield [["foo" => "bar"], ["foo" => "bar"]];
+        yield [(object)["foo" => "bar"], ["foo" => "bar"]];
+        yield [new ArrayObject(["foo" => "bar"]), ["foo" => "bar"]];
+        yield ["foo", ["foo"]];
+        yield [" foo ", [" foo "]];
+        yield ["foo,bar,baz", ["foo,bar,baz"]];
+        yield ["10,20,30", ["10,20,30"]];
+        yield [' {"foo":"bar"} ', ["foo" => "bar"]];
+        yield [' [10,"foo"] ', [10, "foo"]];
+        yield [100, [100]];
+        yield [null, []];
+        yield [true, [true]];
+        yield [false, [false]];
+        yield [$fooObj, ["foo"]];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider normalizeDataValue_arrayDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue_array
+     *
+     * @param       $value
+     * @param array $expectedValue
+     * @param bool  $error
+     */
+    public function testNormalizeDataValue_array($value, array $expectedValue, bool $error = false)
+    {
+        if ($error) {
+            $this->expectException(BeanException::class);
+            $this->expectExceptionCode(BeanException::ERROR_CODE_INVALID_DATA_VALUE);
+        }
+        
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "normalizeDataValue_array", [$value]));
+    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function normalizeDataValue_iterableDataProvider()
+    {
+        $fooObj = new class {
+            function toArray(): array
+            {
+                return ["foo"];
+            }
+        };
+        
+        $iteratorAggregateObj = new class implements IteratorAggregate {
+            public function getIterator()
+            {
+                return new ArrayIterator([10, 20, 30]);
+            }
+        };
+        
+        $yieldObj = new class {
+            public function __invoke()
+            {
+                yield "foo";
+            }
+        };
+        
+        $yieldObjGenerator = $yieldObj();
+        
+        $arrObj = new ArrayObject(["foo" => "bar"]);
+        $arrIter = new ArrayIterator([10, 20, 30]);
+        
+        yield [[], []];
+        yield [["foo" => "bar"], ["foo" => "bar"]];
+        yield [(object)["foo" => "bar"], ["foo" => "bar"]];
+        yield [$arrObj, $arrObj];
+        yield [$arrIter, $arrIter];
+        yield [$fooObj, ["foo"]];
+        yield [$iteratorAggregateObj, $iteratorAggregateObj];
+        yield [$yieldObjGenerator, $yieldObjGenerator];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider normalizeDataValue_iterableDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue_iterable
+     *
+     * @param       $value
+     * @param array $expectedValue
+     * @param bool  $error
+     */
+    public function testNormalizeDataValue_iterable($value, iterable $expectedValue, bool $error = false)
+    {
+        if ($error) {
+            $this->expectException(BeanException::class);
+            $this->expectExceptionCode(BeanException::ERROR_CODE_INVALID_DATA_VALUE);
+        }
+        
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "normalizeDataValue_iterable", [$value]));
     }
 }

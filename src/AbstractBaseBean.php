@@ -457,9 +457,24 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     {
         $dataType = strtolower(trim($dataType));
         switch ($dataType) {
-            case "bool":
-            case self::DATA_TYPE_BOOL:
-                $dataType = "boolean";
+            case "boolean":
+                $dataType = "bool";
+                break;
+    
+            case "integer":
+                $dataType = "int";
+                break;
+                
+            case "double":
+                $dataType = self::DATA_TYPE_FLOAT;
+                break;
+    
+            case "str":
+                $dataType = self::DATA_TYPE_STRING;
+                break;
+    
+            case "arr":
+                $dataType = self::DATA_TYPE_ARRAY;
                 break;
         }
         
@@ -496,15 +511,140 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     /**
      * @param $value
      *
-     * @return mixed
+     * @return bool
      * @throws BeanException
      */
-    protected function normalizeDataValue_boolean($value)
+    protected function normalizeDataValue_bool($value): bool
     {
         $origValue = $value;
         $value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         if (is_null($value)) {
             throw new BeanException(sprintf("Invalid value '%s' for data type 'boolean'!", is_scalar($origValue) ? (string)$origValue : "NOT_A_SCALAR_VALUE"), BeanException::ERROR_CODE_INVALID_DATA_VALUE);
+        }
+        
+        return $value;
+    }
+    
+    
+    /**
+     * @param $value
+     *
+     * @return int
+     * @throws BeanException
+     */
+    protected function normalizeDataValue_int($value): int
+    {
+        $origValue = $value;
+        if (is_bool($value)) {
+            $value = null;
+        } elseif (is_numeric($value)) {
+            $value = intval($value);
+        }
+        $value = filter_var($value, FILTER_VALIDATE_INT);
+        if ($value === false) {
+            throw new BeanException(
+                sprintf("Invalid value '%s' for data type 'integer'!", is_scalar($origValue) ? (string)$origValue : "NOT_A_SCALAR_VALUE"),
+                BeanException::ERROR_CODE_INVALID_DATA_VALUE
+            );
+        }
+        
+        return $value;
+    }
+    
+    
+    /**
+     * @param $value
+     *
+     * @return float
+     * @throws BeanException
+     */
+    protected function normalizeDataValue_float($value): float
+    {
+        $origValue = $value;
+        if (is_bool($value)) {
+            $value = null;
+        }
+        $value = filter_var($value, FILTER_VALIDATE_FLOAT, ["flags" => FILTER_FLAG_ALLOW_THOUSAND]);
+        if ($value === false) {
+            throw new BeanException(
+                sprintf("Invalid value '%s' for data type 'float'!", is_scalar($origValue) ? (string)$origValue : "NOT_A_SCALAR_VALUE"),
+                BeanException::ERROR_CODE_INVALID_DATA_VALUE
+            );
+        }
+        
+        return $value;
+    }
+    
+    
+    /**
+     * @param $value
+     *
+     * @return string
+     * @throws BeanException
+     */
+    protected function normalizeDataValue_string($value): string
+    {
+        $origValue = $value;
+        try {
+            if (is_object($value) && !method_exists($value, "__toString")) {
+                throw new BeanException("object to string conversion not possible!");
+            } elseif (is_array($value)) {
+                throw new BeanException("array to string conversion not possible!");
+            }
+            $value = (string)$value;
+        } catch (Exception $e) {
+            throw new BeanException(
+                sprintf("Invalid value '%s' for data type 'string' - %s!", is_scalar($origValue) ? (string)$origValue : "NOT_A_SCALAR_VALUE", $e->getMessage()),
+                BeanException::ERROR_CODE_INVALID_DATA_VALUE
+            );
+        }
+        
+        return $value;
+    }
+    
+    
+    /**
+     * @param $value
+     *
+     * @return array
+     */
+    protected function normalizeDataValue_array($value): array
+    {
+        if (is_object($value) && method_exists($value, "toArray")) {
+            $value = $value->toArray();
+        } elseif(is_string($value)) {
+            $trimmedValue = trim($value);
+            if (substr($trimmedValue, 0, 1) === "{" && substr($trimmedValue, -1) === "}") {
+                $value = json_decode($trimmedValue);
+            } elseif (substr($trimmedValue, 0, 1) === "[" && substr($trimmedValue, -1) === "]") {
+                $value = json_decode($trimmedValue);
+            }
+        }
+        
+        $value = (array)$value;
+        
+        return $value;
+    }
+    
+    
+    /**
+     * @param $value
+     *
+     * @return array
+     * @throws BeanException
+     */
+    protected function normalizeDataValue_iterable($value): iterable
+    {
+        if (!is_iterable($value)) {
+            if ($value instanceof stdClass) {
+                $value = (array)$value;
+            } elseif (is_object($value) && method_exists($value, "toArray")) {
+                $value = $value->toArray();
+            } else {
+                throw new BeanException(
+                    "Invalid value for data type 'iterable'!", BeanException::ERROR_CODE_INVALID_DATA_VALUE
+                );
+            }
         }
         
         return $value;
