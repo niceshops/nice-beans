@@ -210,8 +210,7 @@ class AbstractBaseBeanTest extends DefaultTestCase
      */
     public function getDataTypeCallback_CallbackFoundAtBeanClassDataProvider()
     {
-        //  @TODO implement normalizer for callable data type
-//        yield AbstractBaseBean::DATA_TYPE_CALLABLE => [AbstractBaseBean::DATA_TYPE_CALLABLE];
+        yield AbstractBaseBean::DATA_TYPE_CALLABLE => [AbstractBaseBean::DATA_TYPE_CALLABLE];
         yield AbstractBaseBean::DATA_TYPE_STRING => [AbstractBaseBean::DATA_TYPE_STRING];
         yield AbstractBaseBean::DATA_TYPE_ARRAY => [AbstractBaseBean::DATA_TYPE_ARRAY];
         yield AbstractBaseBean::DATA_TYPE_INT => [AbstractBaseBean::DATA_TYPE_INT];
@@ -258,8 +257,6 @@ class AbstractBaseBeanTest extends DefaultTestCase
      */
     public function getDataTypeCallback_CallbackNotFoundAtBeanClass()
     {
-        //  @TODO implement normalizer for callable data type
-        yield AbstractBaseBean::DATA_TYPE_CALLABLE => [AbstractBaseBean::DATA_TYPE_CALLABLE];
         yield AbstractBaseBean::DATA_TYPE_DATE => [AbstractBaseBean::DATA_TYPE_DATE];
         yield "foo" => ["foo"];
     }
@@ -1633,6 +1630,47 @@ class AbstractBaseBeanTest extends DefaultTestCase
         } else {
             $this->assertSame($expectedValue, $actualValue);
         }
+    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function normalizeDataValue_callableDataProvider()
+    {
+        $func = function(){};
+        
+        yield ["strlen", "strlen"];
+        yield [$func, $func];
+        yield [[$this, "normalizeDataValue_callableDataProvider"], [$this, "normalizeDataValue_callableDataProvider"]];
+        yield ["foo", "foo", true];
+        yield [null, null, true];
+        yield [true, null, true];
+        yield [false, null, true];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider normalizeDataValue_callableDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue_callable
+     *
+     * @param                   $value
+     * @param resource          $expectedValue
+     * @param bool              $error
+     */
+    public function testNormalizeDataValue_callable($value, $expectedValue, bool $error = false)
+    {
+        if ($error) {
+            $this->expectException(BeanException::class);
+            $this->expectExceptionCode(BeanException::ERROR_CODE_INVALID_DATA_VALUE);
+        }
+        
+        $actualValue = $this->invokeMethod($this->object, "normalizeDataValue_callable", [$value]);
+        $this->assertSame($expectedValue, $actualValue);
     }
     
     

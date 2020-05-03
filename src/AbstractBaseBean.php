@@ -538,6 +538,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             case "res";
                 $dataType = self::DATA_TYPE_RESOURCE;
                 break;
+    
+            case self::DATA_TYPE_CALLABLE:
+            case "callback";
+                $dataType = self::DATA_TYPE_CALLABLE;
+                break;
         }
         
         return $dataType;
@@ -786,6 +791,26 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         if (!is_resource($value)) {
             throw new BeanException(
                 sprintf("Invalid value '%s' for data type 'resource'!", is_scalar($origValue) ? (string)$origValue : "NOT_A_SCALAR_VALUE"),
+                BeanException::ERROR_CODE_INVALID_DATA_VALUE
+            );
+        }
+        
+        return $value;
+    }
+    
+    
+    /**
+     * @param $value
+     *
+     * @return callable
+     * @throws BeanException
+     */
+    protected function normalizeDataValue_callable($value): callable
+    {
+        if (!is_callable($value)) {
+            $origValue = $value;
+            throw new BeanException(
+                sprintf("Invalid value '%s' for data type 'callable'!", is_scalar($origValue) ? (string)$origValue : "NOT_A_SCALAR_VALUE"),
                 BeanException::ERROR_CODE_INVALID_DATA_VALUE
             );
         }
