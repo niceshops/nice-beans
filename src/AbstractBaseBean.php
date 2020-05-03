@@ -39,6 +39,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     const DATA_TYPE_DATE = 'date';
     const DATA_TYPE_DATETIME_PHP = 'datetime';
     const DATA_TYPE_OBJECT = 'object';
+    const DATA_TYPE_RESOURCE = 'resource';
     
     const DATA_KEY_WILDCARD = "*";
     
@@ -482,6 +483,14 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             case self::DATA_TYPE_DATE;
                 $dataType = self::DATA_TYPE_DATETIME_PHP;
                 break;
+    
+            case "obj";
+                $dataType = self::DATA_TYPE_OBJECT;
+                break;
+    
+            case "res";
+                $dataType = self::DATA_TYPE_RESOURCE;
+                break;
         }
         
         return $dataType;
@@ -711,6 +720,29 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 $value = (object)$value;
             }
         }
+        return $value;
+    }
+    
+    
+    /**
+     * @param $value
+     *
+     * @return resource
+     * @throws BeanException
+     */
+    protected function normalizeDataValue_resource($value)
+    {
+        $origValue = $value;
+        if (is_string($value) && is_file($value)) {
+            $value = fopen($value, "r");
+        }
+        if (!is_resource($value)) {
+            throw new BeanException(
+                sprintf("Invalid value '%s' for data type 'resource'!", is_scalar($origValue) ? (string)$origValue : "NOT_A_SCALAR_VALUE"),
+                BeanException::ERROR_CODE_INVALID_DATA_VALUE
+            );
+        }
+        
         return $value;
     }
     

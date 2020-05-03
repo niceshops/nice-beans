@@ -1480,4 +1480,49 @@ class AbstractBaseBeanTest extends DefaultTestCase
         }
         $this->assertSame($expectedValue, $actualValue);
     }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function normalizeDataValue_resourceDataProvider()
+    {
+        $tmpFile = tmpfile();
+        $file = tempnam(sys_get_temp_dir(),"ut");
+        
+        yield [$tmpFile, $tmpFile];
+        yield [$file, $file];
+        yield ["foo", null, true];
+        yield [null, null, true];
+        yield [true, null, true];
+        yield [false, null, true];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider normalizeDataValue_resourceDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue_resource
+     *
+     * @param                   $value
+     * @param resource          $expectedValue
+     * @param bool              $error
+     */
+    public function testNormalizeDataValue_resource($value, $expectedValue, bool $error = false)
+    {
+        if ($error) {
+            $this->expectException(BeanException::class);
+            $this->expectExceptionCode(BeanException::ERROR_CODE_INVALID_DATA_VALUE);
+        }
+    
+        $actualValue = $this->invokeMethod($this->object, "normalizeDataValue_resource", [$value]);
+        if (is_string($expectedValue)) {
+            $this->assertTrue(is_resource($actualValue));
+        } else {
+            $this->assertSame($expectedValue, $actualValue);
+        }
+    }
 }
