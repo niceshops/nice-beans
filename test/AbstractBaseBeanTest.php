@@ -12,6 +12,7 @@ use ArrayObject;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
+use Exception;
 use Generator;
 use IteratorAggregate;
 use NiceshopsDev\Bean\BeanList\BeanListInterface;
@@ -1524,5 +1525,21 @@ class AbstractBaseBeanTest extends DefaultTestCase
         } else {
             $this->assertSame($expectedValue, $actualValue);
         }
+    }
+    
+    
+    /**
+     * @group   unit
+     * @see to solve the problem use https://github.com/opis/closure
+     */
+    public function testSerializationOfClosureIsNotAllowed()
+    {
+        $func = function($value) {
+            return "hello $value!";
+        };
+        
+        $this->expectException(Exception::class);
+        
+        serialize($func);
     }
 }
