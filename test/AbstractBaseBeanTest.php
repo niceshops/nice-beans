@@ -152,38 +152,13 @@ class AbstractBaseBeanTest extends DefaultTestCase
     public function testGetDataType_isString()
     {
         $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
-            ["normalizeDataName"]
+            ["getDataTypeData"]
         )->getMockForAbstractClass();
-        $name = " foo ";
-        $key = "foo";
-        $this->invokeSetProperty($this->object, "arrDataType", [$key => "bar"]);
-        
-        $this->object->expects($this->once())->method("normalizeDataName")->with(...[$name])->willReturn($key);
+        $name = "foo";
+        $arrDataTypeData = ["name" => "bar", "callback" => null];
+        $this->object->expects($this->once())->method("getDataTypeData")->with(...[$name])->willReturn($arrDataTypeData);
         
         $this->assertSame("bar", $this->invokeMethod($this->object, "getDataType", $name));
-    }
-    
-    
-    /**
-     * @group  unit
-     * @small
-     *
-     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getDataType
-     */
-    public function testGetDataType_isCallable()
-    {
-        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
-            ["normalizeDataName"]
-        )->getMockForAbstractClass();
-        $name = " foo ";
-        $key = "foo";
-        $callable = function () {
-        };
-        $this->invokeSetProperty($this->object, "arrDataType", [$key => $callable]);
-        
-        $this->object->expects($this->once())->method("normalizeDataName")->with(...[$name])->willReturn($key);
-        
-        $this->assertSame(AbstractBaseBean::DATA_TYPE_CALLABLE, $this->invokeMethod($this->object, "getDataType", $name));
     }
     
     
@@ -196,15 +171,148 @@ class AbstractBaseBeanTest extends DefaultTestCase
     public function testGetDataType_isNull()
     {
         $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
-            ["normalizeDataName"]
+            ["getDataTypeData"]
         )->getMockForAbstractClass();
-        $name = " foo ";
-        $key = "foo";
-        $this->invokeSetProperty($this->object, "arrDataType", []);
-        
-        $this->object->expects($this->once())->method("normalizeDataName")->with(...[$name])->willReturn($key);
-        
+        $name = "foo";
+        $arrDataTypeData = null;
+        $this->object->expects($this->once())->method("getDataTypeData")->with(...[$name])->willReturn($arrDataTypeData);
+    
         $this->assertNull($this->invokeMethod($this->object, "getDataType", $name));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getDataTypeCallback
+     */
+    public function testGetDataTypeCallback_CallbackAtDataTypeDataFound()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["getDataTypeData"]
+        )->getMockForAbstractClass();
+        
+        $name = "foo";
+        $arrDataTypeData = [
+            "name" => "bar",
+            "callback" => function () {
+            }
+        ];
+        $this->object->expects($this->once())->method("getDataTypeData")->with(...[$name])->willReturn($arrDataTypeData);
+        
+        $this->assertSame($arrDataTypeData["callback"], $this->invokeMethod($this->object, "getDataTypeCallback", $name));
+    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function getDataTypeCallback_CallbackFoundAtBeanClassDataProvider()
+    {
+        //  @TODO implement normalizer for callable data type
+//        yield AbstractBaseBean::DATA_TYPE_CALLABLE => [AbstractBaseBean::DATA_TYPE_CALLABLE];
+        yield AbstractBaseBean::DATA_TYPE_STRING => [AbstractBaseBean::DATA_TYPE_STRING];
+        yield AbstractBaseBean::DATA_TYPE_ARRAY => [AbstractBaseBean::DATA_TYPE_ARRAY];
+        yield AbstractBaseBean::DATA_TYPE_INT => [AbstractBaseBean::DATA_TYPE_INT];
+        yield AbstractBaseBean::DATA_TYPE_FLOAT => [AbstractBaseBean::DATA_TYPE_FLOAT];
+        yield AbstractBaseBean::DATA_TYPE_BOOL => [AbstractBaseBean::DATA_TYPE_BOOL];
+        yield AbstractBaseBean::DATA_TYPE_ITERABLE => [AbstractBaseBean::DATA_TYPE_ITERABLE];
+        yield AbstractBaseBean::DATA_TYPE_DATETIME_PHP => [AbstractBaseBean::DATA_TYPE_DATETIME_PHP];
+        yield AbstractBaseBean::DATA_TYPE_OBJECT => [AbstractBaseBean::DATA_TYPE_OBJECT];
+        yield AbstractBaseBean::DATA_TYPE_RESOURCE => [AbstractBaseBean::DATA_TYPE_RESOURCE];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     * @dataProvider getDataTypeCallback_CallbackFoundAtBeanClassDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::getDataTypeCallback
+     *
+     * @param string $dataType
+     */
+    public function testGetDataTypeCallback_CallbackFoundAtBeanClass(string $dataType)
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["getDataTypeData", "getDataType"]
+        )->getMockForAbstractClass();
+        
+        $name = "foo";
+        $arrDataTypeData = [
+            "name" => $dataType,
+            "callback" => null,
+        ];
+        $expectedValue = [$this->object, "normalizeDataValue_" . $dataType];
+        
+        $this->object->expects($this->once())->method("getDataTypeData")->with(...[$name])->willReturn($arrDataTypeData);
+        $this->object->expects($this->once())->method("getDataType")->with(...[$name])->willReturn($dataType);
+        
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "getDataTypeCallback", $name));
+    }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function getDataTypeCallback_CallbackNotFoundAtBeanClass()
+    {
+        //  @TODO implement normalizer for callable data type
+        yield AbstractBaseBean::DATA_TYPE_CALLABLE => [AbstractBaseBean::DATA_TYPE_CALLABLE];
+        yield AbstractBaseBean::DATA_TYPE_DATE => [AbstractBaseBean::DATA_TYPE_DATE];
+        yield "foo" => ["foo"];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     * @dataProvider getDataTypeCallback_CallbackNotFoundAtBeanClass
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::getDataTypeCallback
+     *
+     * @param string $dataType
+     */
+    public function testGetDataTypeCallback_CallbackNotFoundAtBeanClass(string $dataType)
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["getDataTypeData", "getDataType"]
+        )->getMockForAbstractClass();
+        
+        $name = "foo";
+        $arrDataTypeData = [
+            "name" => $dataType,
+            "callback" => null,
+        ];
+        
+        $this->object->expects($this->once())->method("getDataTypeData")->with(...[$name])->willReturn($arrDataTypeData);
+        $this->object->expects($this->once())->method("getDataType")->with(...[$name])->willReturn($dataType);
+        
+        $this->assertNull($this->invokeMethod($this->object, "getDataTypeCallback", $name));
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::getDataTypeCallback
+     */
+    public function testGetDataTypeCallback_DataTypeNotFound()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["getDataTypeData", "getDataType"]
+        )->getMockForAbstractClass();
+        
+        $name = "foo";
+        $arrDataTypeData = null;
+        $dataType = null;
+        
+        $this->object->expects($this->once())->method("getDataTypeData")->with(...[$name])->willReturn($arrDataTypeData);
+        $this->object->expects($this->once())->method("getDataType")->with(...[$name])->willReturn($dataType);
+        
+        $this->assertNull($this->invokeMethod($this->object, "getDataTypeCallback", $name));
     }
 
 

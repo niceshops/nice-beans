@@ -56,7 +56,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     
     
     /**
-     * @var array   [ "<NORMALIZED_NAME>" => "<DATA_TYPE" | <CALLABLE>, ... ]
+     * @var array   [ "<NORMALIZED_NAME>" => [ "name" => "<DATA_TYPE>", "callback" => <CALLABLE>? ], ... ]
      */
     private $arrDataType = [];
     
@@ -398,21 +398,60 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     /**
      * @param string $name
      *
-     * @return null|string  NULL if no datatype is defined for passed name
-     * @throws BeanException
+     * @return array|null   [ "name" => "<DATA_TYPE>", "callback" => <CALLABLE>? ]
      */
-    protected function getDataType(string $name): ?string
+    protected function getDataTypeData(string $name) : ?array
     {
-        $key = $this->normalizeDataName($name);
+        try {
+            $key = $this->normalizeDataName($name);
+        } catch (BeanException $e) {
+            return null;
+        }
         
-        if (isset($this->arrDataType[$key]) && is_string($this->arrDataType[$key])) {
+        if (isset($this->arrDataType[$key]) && is_array($this->arrDataType[$key])) {
             return $this->arrDataType[$key];
         }
         
-        if (isset($this->arrDataType[$key]) && is_callable($this->arrDataType[$key])) {
-            return self::DATA_TYPE_CALLABLE;
+        return null;
+    }
+    
+    
+    /**
+     * @param string $name  data name
+     *
+     * @return null|string
+     */
+    protected function getDataType(string $name): ?string
+    {
+        $data = $this->getDataTypeData($name);
+        if (isset($data["name"]) && is_string($data["name"])) {
+            return $data["name"];
         }
         
+        return null;
+    }
+    
+    
+    /**
+     * @param string $name  data name
+     *
+     * @return callable|null
+     */
+    protected function getDataTypeCallback(string $name): ?callable
+    {
+        $data = $this->getDataTypeData($name);
+        if (isset($data["callback"]) && is_callable($data["callback"])) {
+            return $data["callback"];
+        }
+        
+        $dataType = $this->getDataType($name);
+        if (null !== $dataType) {
+            $methodName = "normalizeDataValue_" . $dataType;
+            if (method_exists($this, $methodName)) {
+                return [$this, $methodName];
+            }
+        }
+    
         return null;
     }
     
@@ -458,36 +497,44 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
      */
     protected function normalizeDataType(string $dataType): string
     {
-        $dataType = strtolower(trim($dataType));
-        switch ($dataType) {
+        $dataType = trim($dataType);
+        switch (strtolower($dataType)) {
+            case self::DATA_TYPE_BOOL:
             case "boolean":
-                $dataType = "bool";
+                $dataType = self::DATA_TYPE_BOOL;
                 break;
-    
+            
+            case self::DATA_TYPE_INT:
             case "integer":
                 $dataType = "int";
                 break;
-                
+            
+            case self::DATA_TYPE_FLOAT:
             case "double":
                 $dataType = self::DATA_TYPE_FLOAT;
                 break;
-    
+            
+            case self::DATA_TYPE_STRING:
             case "str":
                 $dataType = self::DATA_TYPE_STRING;
                 break;
-    
+            
+            case self::DATA_TYPE_ARRAY:
             case "arr":
                 $dataType = self::DATA_TYPE_ARRAY;
                 break;
-    
+            
+            case self::DATA_TYPE_DATETIME_PHP:
             case self::DATA_TYPE_DATE;
                 $dataType = self::DATA_TYPE_DATETIME_PHP;
                 break;
-    
+            
+            case self::DATA_TYPE_OBJECT:
             case "obj";
                 $dataType = self::DATA_TYPE_OBJECT;
                 break;
-    
+            
+            case self::DATA_TYPE_RESOURCE:
             case "res";
                 $dataType = self::DATA_TYPE_RESOURCE;
                 break;
@@ -824,7 +871,6 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
      * @param bool   $ignoreSelf
      *
      * @return array
-     * @throws BeanException
      */
     protected function getDataName_List_with_DataNamePrefix_and_DataTypeDefinition(string $normalizedDataNamePrefix, bool $ignoreSelf = true)
     {
