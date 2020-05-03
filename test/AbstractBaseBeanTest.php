@@ -1688,4 +1688,55 @@ class AbstractBaseBeanTest extends DefaultTestCase
         
         serialize($func);
     }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function normalizeDataTypeDataProvider()
+    {
+        yield ["", ""];
+        yield [" ", ""];
+        yield [" Foo ", "Foo"];
+        yield [BeanInterface::class, BeanInterface::class];
+        
+        yield ["Boolean", AbstractBaseBean::DATA_TYPE_BOOL];
+        yield ["Integer", AbstractBaseBean::DATA_TYPE_INT];
+        yield ["Double", AbstractBaseBean::DATA_TYPE_FLOAT];
+        yield ["STR", AbstractBaseBean::DATA_TYPE_STRING];
+        yield ["ARR", AbstractBaseBean::DATA_TYPE_ARRAY];
+        yield ["Date", AbstractBaseBean::DATA_TYPE_DATETIME_PHP];
+        yield ["Obj", AbstractBaseBean::DATA_TYPE_OBJECT];
+        yield ["Res", AbstractBaseBean::DATA_TYPE_RESOURCE];
+        yield ["Iter", AbstractBaseBean::DATA_TYPE_ITERABLE];
+        yield ["Callback", AbstractBaseBean::DATA_TYPE_CALLABLE];
+        
+        yield AbstractBaseBean::DATA_TYPE_CALLABLE => [strtoupper(AbstractBaseBean::DATA_TYPE_CALLABLE), AbstractBaseBean::DATA_TYPE_CALLABLE];
+        yield AbstractBaseBean::DATA_TYPE_STRING => [strtoupper(AbstractBaseBean::DATA_TYPE_STRING), AbstractBaseBean::DATA_TYPE_STRING];
+        yield AbstractBaseBean::DATA_TYPE_ARRAY => [strtoupper(AbstractBaseBean::DATA_TYPE_ARRAY), AbstractBaseBean::DATA_TYPE_ARRAY];
+        yield AbstractBaseBean::DATA_TYPE_INT => [strtoupper(AbstractBaseBean::DATA_TYPE_INT), AbstractBaseBean::DATA_TYPE_INT];
+        yield AbstractBaseBean::DATA_TYPE_FLOAT => [strtoupper(AbstractBaseBean::DATA_TYPE_FLOAT), AbstractBaseBean::DATA_TYPE_FLOAT];
+        yield AbstractBaseBean::DATA_TYPE_BOOL => [strtoupper(AbstractBaseBean::DATA_TYPE_BOOL), AbstractBaseBean::DATA_TYPE_BOOL];
+        yield AbstractBaseBean::DATA_TYPE_ITERABLE => [strtoupper(AbstractBaseBean::DATA_TYPE_ITERABLE), AbstractBaseBean::DATA_TYPE_ITERABLE];
+        yield AbstractBaseBean::DATA_TYPE_DATETIME_PHP => [strtoupper(AbstractBaseBean::DATA_TYPE_DATETIME_PHP), AbstractBaseBean::DATA_TYPE_DATETIME_PHP];
+        yield AbstractBaseBean::DATA_TYPE_OBJECT => [strtoupper(AbstractBaseBean::DATA_TYPE_OBJECT), AbstractBaseBean::DATA_TYPE_OBJECT];
+        yield AbstractBaseBean::DATA_TYPE_RESOURCE => [strtoupper(AbstractBaseBean::DATA_TYPE_RESOURCE), AbstractBaseBean::DATA_TYPE_RESOURCE];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider normalizeDataTypeDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataType
+     *
+     * @param string $dataType
+     * @param string $expectedValue
+     */
+    public function testNormalizeDataType(string $dataType, string $expectedValue)
+    {
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "normalizeDataType", $dataType));
+    }
 }

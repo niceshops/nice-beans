@@ -492,8 +492,6 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
      * @param string $dataType
      *
      * @return string
-     * @todo handle further supported data types
-     * @todo UnitTests
      */
     protected function normalizeDataType(string $dataType): string
     {
@@ -537,6 +535,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             case self::DATA_TYPE_RESOURCE:
             case "res";
                 $dataType = self::DATA_TYPE_RESOURCE;
+                break;
+    
+            case self::DATA_TYPE_ITERABLE:
+            case "iter";
+                $dataType = self::DATA_TYPE_ITERABLE;
                 break;
     
             case self::DATA_TYPE_CALLABLE:
