@@ -898,6 +898,43 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     
     
     /**
+     * @return string[]
+     */
+    protected function getValidDataType_List(): array 
+    {
+        return [
+            self::DATA_TYPE_CALLABLE,
+            self::DATA_TYPE_STRING,
+            self::DATA_TYPE_ARRAY,
+            self::DATA_TYPE_INT,
+            self::DATA_TYPE_FLOAT,
+            self::DATA_TYPE_BOOL,
+            self::DATA_TYPE_ITERABLE,
+            self::DATA_TYPE_DATE,
+            self::DATA_TYPE_DATETIME_PHP,
+            self::DATA_TYPE_OBJECT,
+            self::DATA_TYPE_RESOURCE,
+        ];
+    }
+    
+    
+    /**
+     * @param string $name
+     *
+     * @return bool
+     */
+    protected function isValidDataType(string $name): bool
+    {
+        $flag = in_array($name, $this->getValidDataType_List());
+        if (!$flag) {
+            $flag = class_exists($name) || interface_exists($name);
+        }
+        
+        return $flag;
+    }
+    
+    
+    /**
      * @param string $normalizedDataNamePrefix
      * @param bool   $ignoreSelf
      *

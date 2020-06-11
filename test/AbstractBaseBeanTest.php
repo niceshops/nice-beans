@@ -1846,4 +1846,74 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $this->assertTrue($this->invokeMethod($this->object,"hasParentDataName", "foo.bar"));
         $this->assertFalse($this->invokeMethod($this->object,"hasParentDataName", "foo"));
     }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getValidDataType_List
+     */
+    public function testGetValidDataType_List()
+    {
+        $this->assertTrue(is_array($this->invokeMethod($this->object, "getValidDataType_List")));
+    }
+    
+    
+    /**
+     * @group unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::isValidDataType
+     */
+    public function testIsValidDataType_isInValidDataType_List()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["getValidDataType_List"])->getMockForAbstractClass();
+        
+        $name = "foo";
+        $arrValidDataType_List = ["foo", "bar"];
+        
+        $this->object->expects($this->once())->method("getValidDataType_List")->willReturn($arrValidDataType_List);
+        
+        $this->assertTrue($this->invokeMethod($this->object, "isValidDataType", $name));
+    }
+    
+    
+    /**
+     * @group unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::isValidDataType
+     */
+    public function testIsValidDataType_isClassName()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["getValidDataType_List"])->getMockForAbstractClass();
+        
+        $arrValidDataType_List = ["foo", "bar"];
+        
+        $this->object->expects($this->atLeastOnce())->method("getValidDataType_List")->willReturn($arrValidDataType_List);
+        
+        $this->assertTrue($this->invokeMethod($this->object, "isValidDataType", AbstractBaseBean::class));
+        $this->assertTrue($this->invokeMethod($this->object, "isValidDataType", BeanListInterface::class));
+    }
+    
+    
+    /**
+     * @group unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::isValidDataType
+     */
+    public function testIsValidDataType_isNotValid()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["getValidDataType_List"])->getMockForAbstractClass();
+        
+        $arrValidDataType_List = ["foo", "bar"];
+        
+        $this->object->expects($this->atLeastOnce())->method("getValidDataType_List")->willReturn($arrValidDataType_List);
+        
+        $this->assertFalse($this->invokeMethod($this->object, "isValidDataType", "Foo"));
+        $this->assertFalse($this->invokeMethod($this->object, "isValidDataType", " foo "));
+        $this->assertFalse($this->invokeMethod($this->object, "isValidDataType", "baz"));
+    }
 }
