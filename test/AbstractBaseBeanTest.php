@@ -1152,6 +1152,50 @@ class AbstractBaseBeanTest extends DefaultTestCase
     
     
     /**
+     * @group unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue
+     */
+    public function testNormalizeDataValue_valueAndDataTypeAreNull()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["getDefaultValue_for_DataType", "normalizeDataType"]
+        )->getMockForAbstractClass();
+    
+        $value = null;
+        $dataType = null;
+    
+        $this->object->expects($this->never())->method("getDefaultValue_for_DataType");
+        $this->object->expects($this->never())->method("normalizeDataType");
+        
+        $this->assertNull($this->invokeMethod($this->object, "normalizeDataValue", $value, $dataType));
+    }
+    
+    
+    /**
+     * @group unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue
+     */
+    public function testNormalizeDataValue_valueIsNullWithDefinedDataType()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["getDefaultValue_for_DataType", "normalizeDataType"]
+        )->getMockForAbstractClass();
+        
+        $value = null;
+        $dataType = "foo";
+        
+        $this->object->expects($this->once())->method("getDefaultValue_for_DataType")->with(...[$dataType])->willReturn($value);
+        $this->object->expects($this->never())->method("normalizeDataType");
+        
+        $this->assertNull($this->invokeMethod($this->object, "normalizeDataValue", $value, $dataType));
+    }
+    
+    
+    /**
      * @return Generator
      */
     public function normalizeDataValue_boolDataProvider()
