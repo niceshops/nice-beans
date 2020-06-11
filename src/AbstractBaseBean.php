@@ -396,6 +396,71 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     
     
     /**
+     * @param string        $name
+     * @param string        $dataType
+     * @param callable|null $callable only valid and considered for self::DATA_TYPE_CALLABLE datatype
+     *
+     * @return $this
+     * @throws BeanException
+     * @todo UnitTests
+     */
+    protected function setDataType(string $name, string $dataType, callable $callable = null): self
+    {
+        do {
+            //  @todo isFrozen check at FreezableBeanTrait
+            
+            //  @todo isSealed check at SealableBeanTrait
+            
+            $dataType = $this->normalizeDataType($dataType);
+            if (!$this->isValidDataType($dataType)) {
+                throw new BeanException(
+                    sprintf("Try to set invalid datatype '%s' for data '%s'!", $dataType, $name), BeanException::ERROR_CODE_INVALID_DATA_TYPE
+                );
+            }
+            
+            $normalizedDataName = $this->normalizeDataName($name);
+            
+            if ($this->hasParentDataName($normalizedDataName)) {
+                // @todo implement methods "setDataType_to_Parent" and "getDataType_from_Parent"
+//                $this->setDataType_to_Parent($normalizedDataName, self::DATA_TYPE_ARRAY);
+//                if (self::DATA_TYPE_ARRAY !== $this->getDataType_from_Parent($normalizedDataName)) {
+//                    throw new BeanException(sprintf("Wrong data type '%s' for parent to data at key '%s'!", $this->getDataType_from_Parent($normalizedDataName), $normalizedDataName), BeanException::ERROR_CODE_INVALID_DATA_TYPE);
+//                }
+            }
+            
+            if ($dataType === self::DATA_TYPE_CALLABLE) {
+                if (null === $callable) {
+                    throw new BeanException(sprintf("No callable passed for '%s' datatype!", $dataType));
+                }
+                $this->arrDataType[$normalizedDataName] = [
+                    "name" => $dataType,
+                    "callback" => $callable,
+                ];
+            } elseif (class_exists($dataType) || interface_exists($dataType)) {
+                $this->arrDataType[$normalizedDataName] = [
+                    "name" => $dataType,
+                    "callback" => function ($value) use ($dataType) {
+                        if (!($value instanceof $dataType)) {
+                            throw new BeanException(sprintf("Value is not an instance of '%s'!", $dataType));
+                        }
+                        return $value;
+                    },
+                ];
+            } else {
+                $this->arrDataType[$normalizedDataName] = [
+                    "name" => $dataType,
+                    "callback" => null,
+                ];
+            }
+            
+            $this->setOriginalDataName($name, $normalizedDataName);
+        } while (false);
+        
+        return $this;
+    }
+    
+    
+    /**
      * @param string $name
      *
      * @return array|null   [ "name" => "<DATA_TYPE>", "callback" => <CALLABLE>? ]
