@@ -1783,4 +1783,63 @@ class AbstractBaseBeanTest extends DefaultTestCase
     {
         $this->assertSame($expectedValue, $this->invokeMethod($this->object, "normalizeDataType", $dataType));
     }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function getParentDataNameDataProvider()
+    {
+        yield ["", null];
+        yield ["foo", null];
+        yield ["foo.bar", "foo"];
+        yield ["foo.bar.baz", "foo.bar"];
+        
+        yield ["foo..bar.baz", "foo..bar"];
+        yield ["foo.bar..baz", "foo.bar."];
+        
+        yield [".foo", null];
+        yield ["..foo", null];
+        yield [" .foo", " "];
+        yield ["foo.", null];
+        yield ["foo..", null];
+        yield ["foo. ", "foo"];
+        yield [".foo.", null];
+        yield [".foo.bar.", "foo"];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider getParentDataNameDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::getParentDataName
+     *
+     * @param string $name
+     * @param        $expectedValue
+     */
+    public function testGetParentDataName(string $name, $expectedValue)
+    {
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "getParentDataName", $name));
+    }
+    
+    
+    /**
+     * @group unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::hasParentDataName
+     */
+    public function testHasParentDataName()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["getParentDataName"])->getMockForAbstractClass();
+        
+        $this->object->expects($this->at(0))->method("getParentDataName")->with(...["foo.bar"])->willReturn("foo");
+        $this->object->expects($this->at(1))->method("getParentDataName")->with(...["foo"])->willReturn(null);
+        
+        $this->assertTrue($this->invokeMethod($this->object,"hasParentDataName", "foo.bar"));
+        $this->assertFalse($this->invokeMethod($this->object,"hasParentDataName", "foo"));
+    }
 }

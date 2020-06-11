@@ -1154,4 +1154,35 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         
         return [$object, $found];
     }
+    
+    
+    /**
+     * Return parent name for dot notation data names
+     * e.g.: the parent name for "foo.bar.baz" is "foo.bar"
+     *
+     * @param string $name leading and trailing dots will be trimmed
+     *
+     * @return string|null  NULL if there is no parent name
+     */
+    protected function getParentDataName(string $name): ?string
+    {
+        $parentName = null;
+        $name = trim($name, ".");
+        if (false !== ($lastDotPos = strrpos($name, "."))) {
+            $parentName = substr($name, 0, $lastDotPos);
+        }
+        
+        return $parentName;
+    }
+    
+    
+    /**
+     * @param string $name
+     *
+     * @return bool
+     */
+    protected function hasParentDataName(string $name): bool
+    {
+        return null !== $this->getParentDataName($name);
+    }
 }
