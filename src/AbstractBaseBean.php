@@ -570,10 +570,10 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         
         if (null !== $dataType) {
             $dataType = $this->normalizeDataType($dataType);
-            
-            $normalizeMethodName = "normalizeDataValue_" . $dataType;
-            if (method_exists($this, $normalizeMethodName)) {
-                return call_user_func([$this, $normalizeMethodName], $value);
+            $callback = $this->getDataTypeCallback($dataType);
+        
+            if (null !== $callback) {
+                return call_user_func($callback, $value);
             }
         }
         

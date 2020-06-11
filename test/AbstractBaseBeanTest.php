@@ -1138,16 +1138,20 @@ class AbstractBaseBeanTest extends DefaultTestCase
     public function testNormalizeDataValue_normalizeMethodExists()
     {
         $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
-            ["normalizeDataType", "normalizeDataValue_boolean"]
+            ["normalizeDataType", "getDataTypeCallback"]
         )->getMockForAbstractClass();
         
         $value = "foo";
         $normalizedValue = "bar";
+        $dataType = "baz";
+        $callback = function() use ($normalizedValue) {
+            return $normalizedValue;
+        };
         
-        $this->object->expects($this->once())->method("normalizeDataType")->with(...[AbstractBaseBean::DATA_TYPE_BOOL])->willReturn("boolean");
-        $this->object->expects($this->once())->method("normalizeDataValue_boolean")->with(...[$value])->willReturn($normalizedValue);
+        $this->object->expects($this->once())->method("normalizeDataType")->with(...[$dataType])->willReturn($dataType);
+        $this->object->expects($this->once())->method("getDataTypeCallback")->with(...[$dataType])->willReturn($callback);
         
-        $this->assertSame($normalizedValue, $this->invokeMethod($this->object, "normalizeDataValue", [$value, AbstractBaseBean::DATA_TYPE_BOOL]));
+        $this->assertSame($normalizedValue, $this->invokeMethod($this->object, "normalizeDataValue", [$value, $dataType]));
     }
     
     
