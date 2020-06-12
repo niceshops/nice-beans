@@ -499,6 +499,18 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     
     
     /**
+     * @param string $name
+     *
+     * @return bool
+     */
+    protected function getDataTypeNullable(string $name): bool
+    {
+        $data = $this->getDataTypeData($name);
+        return (bool)($data["nullable"] ?? false);
+    }
+    
+    
+    /**
      * @param string $name  data name
      *
      * @return callable|null

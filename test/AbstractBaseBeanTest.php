@@ -2241,4 +2241,43 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $actual = $this->invokeGetProperty($this->object, "arrDataType")[$normalizedDataName];
         $this->assertSame($expected, $actual);
     }
+    
+    
+    /**
+     * @return Generator
+     */
+    public function getDataTypeNullableDataProvider()
+    {
+        yield [[], false];
+        yield [["nullable" => null], false];
+        yield [["nullable" => false], false];
+        yield [["nullable" => ""], false];
+        yield [["nullable" => "0"], false];
+        yield [["nullable" => true], true];
+        yield [["nullable" => 1], true];
+        yield [["nullable" => "true"], true];
+        yield [["nullable" => "false"], true];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     *
+     * @dataProvider getDataTypeNullableDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::getDataTypeNullable
+     *
+     * @param array  $arrDataTypeData   [ "nullable" => <BOOL> ]
+     * @param bool   $expectedValue
+     */
+    public function testGetDataTypeNullable(array $arrDataTypeData, bool $expectedValue)
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["getDataTypeData"])->getMockForAbstractClass();
+        $name = "foo";
+        
+        $this->object->expects($this->once())->method("getDataTypeData")->with(...[$name])->willReturn($arrDataTypeData);
+        
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "getDataTypeNullable", $name));
+    }
 }
