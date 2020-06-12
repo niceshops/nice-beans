@@ -421,11 +421,10 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             $normalizedDataName = $this->normalizeDataName($name);
             
             if ($this->hasParentDataName($normalizedDataName)) {
-                // @todo implement methods "setDataType_to_Parent" and "getDataType_from_Parent"
-//                $this->setDataType_to_Parent($normalizedDataName, self::DATA_TYPE_ARRAY);
-//                if (self::DATA_TYPE_ARRAY !== $this->getDataType_from_Parent($normalizedDataName)) {
-//                    throw new BeanException(sprintf("Wrong data type '%s' for parent to data at key '%s'!", $this->getDataType_from_Parent($normalizedDataName), $normalizedDataName), BeanException::ERROR_CODE_INVALID_DATA_TYPE);
-//                }
+                $this->setDataType_to_Parent($normalizedDataName, self::DATA_TYPE_ARRAY);
+                if (self::DATA_TYPE_ARRAY !== $this->getDataType_from_Parent($normalizedDataName)) {
+                    throw new BeanException(sprintf("Parent of '%s' has wrong datatype '%s' ('%s' required)!", $normalizedDataName, $this->getDataType_from_Parent($normalizedDataName), self::DATA_TYPE_ARRAY), BeanException::ERROR_CODE_INVALID_DATA_TYPE);
+                }
             }
             
             if ($dataType === self::DATA_TYPE_CALLABLE) {
@@ -1286,5 +1285,41 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     protected function hasParentDataName(string $name): bool
     {
         return null !== $this->getParentDataName($name);
+    }
+    
+    
+    /**
+     * @param string $name
+     * @param string $dataType
+     * @param bool   $overwrite
+     *
+     * @return $this
+     * @throws BeanException
+     */
+    protected function setDataType_to_Parent(string $name, string $dataType, bool $overwrite = false): self
+    {
+        if (($parentName = $this->getParentDataName($name))) {
+            if ($overwrite || null === $this->getDataType($parentName)) {
+                $this->setDataType($parentName, $dataType);
+            }
+        }
+        
+        return $this;
+    }
+    
+    
+    /**
+     * @param string $name
+     *
+     * @return string|null
+     */
+    protected function getDataType_from_Parent(string $name): ?string
+    {
+        $dataType = null;
+        
+        if (($parentName = $this->getParentDataName($name))) {
+            $dataType = $this->getDataType($parentName);
+        }
+        return $dataType;
     }
 }

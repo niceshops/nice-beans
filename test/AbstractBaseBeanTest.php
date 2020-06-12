@@ -1916,4 +1916,140 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $this->assertFalse($this->invokeMethod($this->object, "isValidDataType", " foo "));
         $this->assertFalse($this->invokeMethod($this->object, "isValidDataType", "baz"));
     }
+    
+    
+    /**
+     * @group unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::setDataType_to_Parent
+     */
+    public function testSetDataType_to_Parent_withoutParentName()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["getParentDataName", "getDataType", "setDataType"])->getMockForAbstractClass();
+        
+        $name = "foo";
+        $dataType = "bar";
+        $overwrite = false;
+        $parentName = null;
+        
+        $this->object->expects($this->once())->method("getParentDataName")->with(...[$name])->willReturn($parentName);
+        $this->object->expects($this->never())->method("getDataType");
+        $this->object->expects($this->never())->method("setDataType");
+        
+        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType_to_Parent", $name, $dataType, $overwrite));
+    }
+    
+    
+    /**
+     * @group unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::setDataType_to_Parent
+     */
+    public function testSetDataType_to_Parent_withParentNameAndParentDataType()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["getParentDataName", "getDataType", "setDataType"])->getMockForAbstractClass();
+        
+        $name = "foo.baz";
+        $dataType = "bar";
+        $parentDataType = "bat";
+        $overwrite = false;
+        $parentName = "foo";
+        
+        $this->object->expects($this->once())->method("getParentDataName")->with(...[$name])->willReturn($parentName);
+        $this->object->expects($this->once())->method("getDataType")->with(...[$parentName])->willReturn($parentDataType);
+        $this->object->expects($this->never())->method("setDataType");
+        
+        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType_to_Parent", $name, $dataType, $overwrite));
+    }
+    
+    
+    /**
+     * @group unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::setDataType_to_Parent
+     */
+    public function testSetDataType_to_Parent_withParentNameAndNoParentDataType()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["getParentDataName", "getDataType", "setDataType"])->getMockForAbstractClass();
+        
+        $name = "foo.baz";
+        $dataType = "bar";
+        $parentDataType = null;
+        $overwrite = false;
+        $parentName = "foo";
+        
+        $this->object->expects($this->once())->method("getParentDataName")->with(...[$name])->willReturn($parentName);
+        $this->object->expects($this->once())->method("getDataType")->with(...[$parentName])->willReturn($parentDataType);
+        $this->object->expects($this->once())->method("setDataType")->with(...[$parentName, $dataType]);
+        
+        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType_to_Parent", $name, $dataType, $overwrite));
+    }
+    
+    
+    /**
+     * @group unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::setDataType_to_Parent
+     */
+    public function testSetDataType_to_Parent_withParentNameAndOverwrite()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["getParentDataName", "getDataType", "setDataType"])->getMockForAbstractClass();
+    
+        $name = "foo.baz";
+        $dataType = "bar";
+        $overwrite = true;
+        $parentName = "foo";
+    
+        $this->object->expects($this->once())->method("getParentDataName")->with(...[$name])->willReturn($parentName);
+        $this->object->expects($this->never())->method("getDataType");
+        $this->object->expects($this->once())->method("setDataType")->with(...[$parentName, $dataType]);
+    
+        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType_to_Parent", $name, $dataType, $overwrite));
+    }
+    
+    
+    /**
+     * @group unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getDataType_from_Parent
+     */
+    public function testGetDataType_from_Parent_withoutParentName()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["getParentDataName", "getDataType"])->getMockForAbstractClass();
+        
+        $name = "foo";
+        $parentName = null;
+        $dataType = null;
+    
+        $this->object->expects($this->once())->method("getParentDataName")->with(...[$name])->willReturn($parentName);
+        $this->object->expects($this->never())->method("getDataType");
+        
+        $this->assertSame($dataType, $this->invokeMethod($this->object, "getDataType_from_Parent", $name));
+    }
+    
+    
+    /**
+     * @group unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::getDataType_from_Parent
+     */
+    public function testGetDataType_from_Parent_withParentName()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["getParentDataName", "getDataType"])->getMockForAbstractClass();
+        
+        $name = "foo.bar";
+        $parentName = "foo";
+        $dataType = "baz";
+        
+        $this->object->expects($this->once())->method("getParentDataName")->with(...[$name])->willReturn($parentName);
+        $this->object->expects($this->once())->method("getDataType")->with(...[$parentName])->willReturn($dataType);
+        
+        $this->assertSame($dataType, $this->invokeMethod($this->object, "getDataType_from_Parent", $name));
+    }
 }
