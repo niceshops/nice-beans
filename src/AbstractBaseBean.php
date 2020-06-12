@@ -91,12 +91,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             $this->setOriginalDataName($origName, $name);
         }
         
-        $dataType = $this->getDataType($name);
-        if ($dataType === self::DATA_TYPE_CALLABLE) {
-            $dataType = $this->getDataTypeCallable($name);
-        }
-        
-        $value = $this->normalizeDataValue($value, $dataType);
+        $value = $this->normalizeDataValue($value, $name);
         
         //  @todo hasDataModified check at AbstractModifiedBean     // $modified = $this->hasDataModified($name, $value);
         
@@ -151,8 +146,8 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         } else {
             $this->data[$name] = $value;
         }
-        
-        if ($dataType === self::DATA_TYPE_ARRAY && is_array($value)) {
+    
+        if (is_array($value) && $this->getDataType($name) === self::DATA_TYPE_ARRAY) {
             $this->normalizeDataValue_for_normalizedDataName($name);
         }
         
@@ -632,27 +627,26 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     
     /**
      * @param mixed  $value
-     * @param string $dataType
+     * @param string $name
      *
      * @return mixed
+     * @throws BeanException
      */
-    protected function normalizeDataValue($value, string $dataType = null)
+    protected function normalizeDataValue($value, string $name)
     {
+        $dataType = $this->getDataType($name);
+        
         if (null === $value) {
-            if (null !== $dataType) {
-                $value = $this->getDefaultValue_for_DataType($dataType);
-            }
-            
-            return $value;
+            $value = $this->getDefaultValue_for_DataType($dataType);
         }
         
-        if (null !== $dataType) {
-            $dataType = $this->normalizeDataType($dataType);
-            $callback = $this->getDataTypeCallback($dataType);
+        if (null === $value && !$this->getDataTypeNullable($name)) {
+            throw new BeanException(sprintf("Data '%s' can not be NULL!", $name), BeanException::ERROR_CODE_DATA_IS_NOT_NULLABLE);
+        }
         
-            if (null !== $callback) {
-                return call_user_func($callback, $value);
-            }
+        $callback = $this->getDataTypeCallback($name);
+        if (null !== $callback) {
+            return call_user_func($callback, $value, $name);
         }
         
         return $value;
