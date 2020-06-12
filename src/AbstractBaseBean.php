@@ -646,7 +646,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         
         $callback = $this->getDataTypeCallback($name);
         if (null !== $callback) {
-            return call_user_func($callback, $value, $name);
+            return call_user_func($callback, $value, $name, $this);
         }
         
         return $value;

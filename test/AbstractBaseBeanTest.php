@@ -1226,11 +1226,11 @@ class AbstractBaseBeanTest extends DefaultTestCase
         )->getMockForAbstractClass();
         
         $value = "bak";
-        $expectedValue = "foo=bak";
+        $expectedValue = "foo=bak with " . get_class($this->object);
         $name = "foo";
         $dataType = "bar";
-        $callback = function($value, string $name){
-            return "$name=$value";
+        $callback = function($value, string $name, AbstractBaseBean $context){
+            return "$name=$value with " . get_class($context);
         };
         
         $this->object->expects($this->once())->method("getDataType")->with(...[$name])->willReturn($dataType);
