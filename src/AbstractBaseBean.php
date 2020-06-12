@@ -56,7 +56,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     
     
     /**
-     * @var array   [ "<NORMALIZED_NAME>" => [ "name" => "<DATA_TYPE>", "callback" => <CALLABLE>? ], ... ]
+     * @var array   [ "<NORMALIZED_NAME>" => [ "name" => "<DATA_TYPE>", "callback" => <CALLABLE>?, "nullable" => <BOOL> ], ... ]
      */
     private $arrDataType = [];
     
@@ -391,14 +391,41 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     
     
     /**
+     * @param string   $name
+     * @param callable $callable
+     *
+     * @return $this
+     * @throws BeanException
+     */
+    protected function setDataTypeCallable(string $name, callable $callable): self
+    {
+        return $this->setDataType($name, self::DATA_TYPE_CALLABLE, false, $callable);
+    }
+    
+    
+    /**
+     * @param string $name
+     * @param string $dataType
+     *
+     * @return $this
+     * @throws BeanException
+     */
+    protected function setDataTypeNullable(string $name, string $dataType): self
+    {
+        return $this->setDataType($name, $dataType, true);
+    }
+    
+    
+    /**
      * @param string        $name
      * @param string        $dataType
+     * @param bool          $nullable
      * @param callable|null $callable only valid and considered for self::DATA_TYPE_CALLABLE datatype
      *
      * @return $this
      * @throws BeanException
      */
-    protected function setDataType(string $name, string $dataType, callable $callable = null): self
+    protected function setDataType(string $name, string $dataType, bool $nullable = false, callable $callable = null): self
     {
         do {
             //  @todo isFrozen check at FreezableBeanTrait
@@ -427,11 +454,13 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 $this->arrDataType[$normalizedDataName] = [
                     "name" => $dataType,
                     "callback" => $callable,
+                    "nullable" => $nullable,
                 ];
             } elseif (in_array($dataType, $this->getValidDataType_List())) {
                 $this->arrDataType[$normalizedDataName] = [
                     "name" => $dataType,
                     "callback" => null,
+                    "nullable" => $nullable,
                 ];
             } elseif (class_exists($dataType) || interface_exists($dataType)) {
                 $this->arrDataType[$normalizedDataName] = [
@@ -442,6 +471,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                         }
                         return $value;
                     },
+                    "nullable" => $nullable,
                 ];
             } else {
                 throw new BeanException(
@@ -541,23 +571,6 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         }
         
         return $this;
-    }
-    
-    
-    /**
-     * @param string $name
-     *
-     * @return callable|null
-     * @throws BeanException
-     */
-    protected function getDataTypeCallable(string $name): ?callable
-    {
-        $key = $this->normalizeDataName($name);
-        if (is_callable($this->arrDataType[$key])) {
-            return $this->arrDataType[$key];
-        }
-        
-        return null;
     }
     
     

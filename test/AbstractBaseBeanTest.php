@@ -2054,6 +2054,7 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $name = "foo";
         $normalizedDataName = "bar";
         $dataType = "__INVALID__";
+        $nullable = false;
         $callable = null;
         $hasParentDataName = false;
         $arrValidDataType = ["foo"];
@@ -2066,7 +2067,7 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $this->object->expects($this->once())->method("hasParentDataName")->with(...[$normalizedDataName])->willReturn($hasParentDataName);
         $this->object->expects($this->once())->method("getValidDataType_List")->willReturn($arrValidDataType);
         
-        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType", [$name, $dataType, $callable]));
+        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType", [$name, $dataType, $nullable, $callable]));
     }
     
     
@@ -2085,6 +2086,7 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $name = "foo";
         $normalizedDataName = "bar";
         $dataType = "__INVALID__";
+        $nullable = false;
         $callable = null;
         $hasParentDataName = true;
         $parentDataType = "__INVALID__";
@@ -2099,7 +2101,7 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $this->object->expects($this->atLeastOnce())->method("getDataType_from_Parent")->with(...[$normalizedDataName])->willReturn($parentDataType);
         $this->object->expects($this->never())->method("getValidDataType_List");
         
-        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType", [$name, $dataType, $callable]));
+        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType", [$name, $dataType, $nullable, $callable]));
     }
     
     
@@ -2118,6 +2120,7 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $name = "foo";
         $normalizedDataName = "bar";
         $dataType = AbstractBaseBean::DATA_TYPE_CALLABLE;
+        $nullable = false;
         $callable = null;
         $hasParentDataName = false;
         
@@ -2129,17 +2132,30 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $this->object->expects($this->once())->method("hasParentDataName")->with(...[$normalizedDataName])->willReturn($hasParentDataName);
         $this->object->expects($this->never())->method("getValidDataType_List");
         
-        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType", [$name, $dataType, $callable]));
+        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType", [$name, $dataType, $nullable, $callable]));
     }
     
     
     /**
-     * @group  unit
-     * @small
-     *
-     * @covers \NiceshopsDev\Bean\AbstractBaseBean::setDataType
+     * @return Generator
      */
-    public function testSetDataType_callable()
+    public function setDataType_callableDataProvider()
+    {
+        yield [false];
+        yield [true];
+    }
+    
+    
+    /**
+     * @group        unit
+     * @small
+     * @dataProvider setDataType_callableDataProvider
+     *
+     * @covers       \NiceshopsDev\Bean\AbstractBaseBean::setDataType
+     *
+     * @param bool $nullable
+     */
+    public function testSetDataType_callable(bool $nullable)
     {
         $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
             ["normalizeDataType", "normalizeDataName", "hasParentDataName", "setOriginalDataName", "getValidDataType_List"]
@@ -2158,11 +2174,12 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $this->object->expects($this->once())->method("setOriginalDataName")->with(...[$name, $normalizedDataName]);
         $this->object->expects($this->never())->method("getValidDataType_List");
         
-        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType", [$name, $dataType, $callable]));
+        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType", [$name, $dataType, $nullable, $callable]));
         
         $expected = [
             "name" => $dataType,
             "callback" => $callable,
+            "nullable" => $nullable,
         ];
         
         $actual = $this->invokeGetProperty($this->object, "arrDataType")[$normalizedDataName];
@@ -2175,8 +2192,10 @@ class AbstractBaseBeanTest extends DefaultTestCase
      */
     public function setDataType_classOrInterfaceDataProvider()
     {
-        yield [AbstractBaseBean::class];
-        yield [BeanInterface::class];
+        yield [AbstractBaseBean::class, false];
+        yield [AbstractBaseBean::class, true];
+        yield [BeanInterface::class, false];
+        yield [BeanInterface::class, true];
     }
     
     
@@ -2188,8 +2207,9 @@ class AbstractBaseBeanTest extends DefaultTestCase
      * @covers       \NiceshopsDev\Bean\AbstractBaseBean::setDataType
      *
      * @param string $dataType
+     * @param bool   $nullable
      */
-    public function testSetDataType_classOrInterface(string $dataType)
+    public function testSetDataType_classOrInterface(string $dataType, bool $nullable)
     {
         $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
             ["normalizeDataType", "normalizeDataName", "hasParentDataName", "setOriginalDataName", "getValidDataType_List"]
@@ -2207,11 +2227,12 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $this->object->expects($this->once())->method("getValidDataType_List")->willReturn($arrValidDataType);
         $this->object->expects($this->once())->method("setOriginalDataName")->with(...[$name, $normalizedDataName]);
         
-        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType", [$name, $dataType, $callable]));
+        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType", [$name, $dataType, $nullable, $callable]));
         
         $expected = [
             "name" => $dataType,
             "callback" => $callable,
+            "nullable" => $nullable,
         ];
         
         $actual = $this->invokeGetProperty($this->object, "arrDataType")[$normalizedDataName];
@@ -2233,16 +2254,27 @@ class AbstractBaseBeanTest extends DefaultTestCase
      */
     public function setDataType_withValidDataTypeDataProvider()
     {
-        yield [AbstractBaseBean::DATA_TYPE_ARRAY];
-        yield [AbstractBaseBean::DATA_TYPE_INT];
-        yield [AbstractBaseBean::DATA_TYPE_FLOAT];
-        yield [AbstractBaseBean::DATA_TYPE_BOOL];
-        yield [AbstractBaseBean::DATA_TYPE_STRING];
-        yield [AbstractBaseBean::DATA_TYPE_ITERABLE];
-        yield [AbstractBaseBean::DATA_TYPE_DATE];
-        yield [AbstractBaseBean::DATA_TYPE_RESOURCE];
-        yield [AbstractBaseBean::DATA_TYPE_OBJECT];
-        yield [AbstractBaseBean::DATA_TYPE_DATETIME_PHP];
+        yield [AbstractBaseBean::DATA_TYPE_ARRAY, false];
+        yield [AbstractBaseBean::DATA_TYPE_INT, false];
+        yield [AbstractBaseBean::DATA_TYPE_FLOAT, false];
+        yield [AbstractBaseBean::DATA_TYPE_BOOL, false];
+        yield [AbstractBaseBean::DATA_TYPE_STRING, false];
+        yield [AbstractBaseBean::DATA_TYPE_ITERABLE, false];
+        yield [AbstractBaseBean::DATA_TYPE_DATE, false];
+        yield [AbstractBaseBean::DATA_TYPE_RESOURCE, false];
+        yield [AbstractBaseBean::DATA_TYPE_OBJECT, false];
+        yield [AbstractBaseBean::DATA_TYPE_DATETIME_PHP, false];
+        
+        yield [AbstractBaseBean::DATA_TYPE_ARRAY, true];
+        yield [AbstractBaseBean::DATA_TYPE_INT, true];
+        yield [AbstractBaseBean::DATA_TYPE_FLOAT, true];
+        yield [AbstractBaseBean::DATA_TYPE_BOOL, true];
+        yield [AbstractBaseBean::DATA_TYPE_STRING, true];
+        yield [AbstractBaseBean::DATA_TYPE_ITERABLE, true];
+        yield [AbstractBaseBean::DATA_TYPE_DATE, true];
+        yield [AbstractBaseBean::DATA_TYPE_RESOURCE, true];
+        yield [AbstractBaseBean::DATA_TYPE_OBJECT, true];
+        yield [AbstractBaseBean::DATA_TYPE_DATETIME_PHP, true];
     }
     
     
@@ -2255,10 +2287,11 @@ class AbstractBaseBeanTest extends DefaultTestCase
      *
      * @param string $dataType
      *
-     * @uses         \NiceshopsDev\Bean\AbstractBaseBean::getValidDataType_List()
+     * @param bool $nullable
      *
+     * @uses         \NiceshopsDev\Bean\AbstractBaseBean::getValidDataType_List()
      */
-    public function testSetDataType_withValidDataType(string $dataType)
+    public function testSetDataType_withValidDataType(string $dataType, bool $nullable)
     {
         $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
             ["normalizeDataType", "normalizeDataName", "hasParentDataName", "setOriginalDataName"]
@@ -2274,11 +2307,12 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $this->object->expects($this->once())->method("hasParentDataName")->with(...[$normalizedDataName])->willReturn($hasParentDataName);
         $this->object->expects($this->once())->method("setOriginalDataName")->with(...[$name, $normalizedDataName]);
         
-        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType", [$name, $dataType, $callable]));
+        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataType", [$name, $dataType, $nullable, $callable]));
         
         $expected = [
             "name" => $dataType,
             "callback" => $callable,
+            "nullable" => $nullable,
         ];
         
         $actual = $this->invokeGetProperty($this->object, "arrDataType")[$normalizedDataName];
@@ -2322,5 +2356,48 @@ class AbstractBaseBeanTest extends DefaultTestCase
         $this->object->expects($this->once())->method("getDataTypeData")->with(...[$name])->willReturn($arrDataTypeData);
         
         $this->assertSame($expectedValue, $this->invokeMethod($this->object, "getDataTypeNullable", $name));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::setDataTypeCallable
+     */
+    public function testSetDataTypeCallable()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["setDataType"])->getMockForAbstractClass();
+        
+        $name = "foo";
+        $callable = function () {
+        };
+        
+        $this->object->expects($this->once())->method("setDataType")->with(...[$name, AbstractBaseBean::DATA_TYPE_CALLABLE, false, $callable])->willReturn(
+            $this->object
+        );
+        
+        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataTypeCallable", [$name, $callable]));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::setDataTypeNullable
+     */
+    public function testSetDataTypeNullable()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(["setDataType"])->getMockForAbstractClass();
+        
+        $name = "foo";
+        $dataType = "bar";
+        
+        $this->object->expects($this->once())->method("setDataType")->with(...[$name, $dataType, true])->willReturn(
+            $this->object
+        );
+        
+        $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataTypeNullable", [$name, $dataType]));
     }
 }
