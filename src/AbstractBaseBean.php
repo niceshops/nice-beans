@@ -402,7 +402,6 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
      *
      * @return $this
      * @throws BeanException
-     * @todo UnitTests
      */
     protected function setDataType(string $name, string $dataType, callable $callable = null): self
     {
@@ -412,18 +411,17 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             //  @todo isSealed check at SealableBeanTrait
             
             $dataType = $this->normalizeDataType($dataType);
-            if (!$this->isValidDataType($dataType)) {
-                throw new BeanException(
-                    sprintf("Try to set invalid datatype '%s' for data '%s'!", $dataType, $name), BeanException::ERROR_CODE_INVALID_DATA_TYPE
-                );
-            }
-            
             $normalizedDataName = $this->normalizeDataName($name);
             
             if ($this->hasParentDataName($normalizedDataName)) {
                 $this->setDataType_to_Parent($normalizedDataName, self::DATA_TYPE_ARRAY);
                 if (self::DATA_TYPE_ARRAY !== $this->getDataType_from_Parent($normalizedDataName)) {
-                    throw new BeanException(sprintf("Parent of '%s' has wrong datatype '%s' ('%s' required)!", $normalizedDataName, $this->getDataType_from_Parent($normalizedDataName), self::DATA_TYPE_ARRAY), BeanException::ERROR_CODE_INVALID_DATA_TYPE);
+                    throw new BeanException(
+                        sprintf(
+                            "Parent of '%s' has wrong datatype '%s' ('%s' required)!", $normalizedDataName, $this->getDataType_from_Parent($normalizedDataName),
+                            self::DATA_TYPE_ARRAY
+                        ), BeanException::ERROR_CODE_INVALID_DATA_TYPE
+                    );
                 }
             }
             
@@ -434,6 +432,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 $this->arrDataType[$normalizedDataName] = [
                     "name" => $dataType,
                     "callback" => $callable,
+                ];
+            } elseif (in_array($dataType, $this->getValidDataType_List())) {
+                $this->arrDataType[$normalizedDataName] = [
+                    "name" => $dataType,
+                    "callback" => null,
                 ];
             } elseif (class_exists($dataType) || interface_exists($dataType)) {
                 $this->arrDataType[$normalizedDataName] = [
@@ -446,10 +449,9 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                     },
                 ];
             } else {
-                $this->arrDataType[$normalizedDataName] = [
-                    "name" => $dataType,
-                    "callback" => null,
-                ];
+                throw new BeanException(
+                    sprintf("Try to set invalid datatype '%s' for data '%s'!", $dataType, $name), BeanException::ERROR_CODE_INVALID_DATA_TYPE
+                );
             }
             
             $this->setOriginalDataName($name, $normalizedDataName);
@@ -979,22 +981,6 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             self::DATA_TYPE_OBJECT,
             self::DATA_TYPE_RESOURCE,
         ];
-    }
-    
-    
-    /**
-     * @param string $name
-     *
-     * @return bool
-     */
-    protected function isValidDataType(string $name): bool
-    {
-        $flag = in_array($name, $this->getValidDataType_List());
-        if (!$flag) {
-            $flag = class_exists($name) || interface_exists($name);
-        }
-        
-        return $flag;
     }
     
     
