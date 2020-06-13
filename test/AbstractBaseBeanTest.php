@@ -2424,4 +2424,159 @@ class AbstractBaseBeanTest extends DefaultTestCase
         
         $this->assertSame($this->object, $this->invokeMethod($this->object, "setDataTypeNullable", [$name, $dataType]));
     }
+    
+    
+    /**
+     * @return Generator
+     */
+    function ResolveWildcardsDataProvider(){
+        $arrData = [
+            "foo" => [
+                "bar" => [
+                    "baz" => ["bat", "bat2", "bat3"]
+                ],
+                "count" => 3,
+                "items" => [
+                    "bak" => [
+                        "id" => 1234,
+                        "name" => "Bak A",
+                    ],
+                    "bat" => [
+                        "id" => 4567,
+                        "name" => "Bat A",
+                        "tags" => [ "foo"],
+                    ],
+                    "baz" => [
+                        "id" => 3210,
+                        "name" => "Baz A",
+                        "tags" => [ "foo", "bar"],
+                    ],
+                ]
+            ],
+            "bar" => [
+                "count" => 4,
+                "items" => [
+                    "bar" => [
+                        "id" => 5687,
+                        "name" => "Bar B",
+                    ],
+                    "bam" => [
+                        "id" => 3687,
+                        "name" => "Bam B",
+                        "tags" => ["baz", "bat", "bal"],
+                    ],
+                    "bat" => [
+                        "id" => 9804,
+                        "name" => "Bat B",
+                        "tags" => ["bat", "foo"],
+                    ],
+                    "bal" => [
+                        "id" => 6882,
+                        "name" => "Bal B",
+                    ],
+                ]
+            ],
+//            "bar.items.*.id" => "special 1234",
+            "*.items.bar.id" => "very special 1234",
+        ];
+    
+        yield [
+            $arrData,
+            "*.items.*.id",
+            [
+                "foo.items.bak.id" => 1234,
+                "foo.items.bat.id" => 4567,
+                "foo.items.baz.id" => 3210,
+                "bar.items.bar.id" => 5687,
+                "bar.items.bam.id" => 3687,
+                "bar.items.bat.id" => 9804,
+                "bar.items.bal.id" => 6882,
+            ]
+        ];
+    
+        yield [
+            $arrData,
+            "*.*.*.tags",
+            [
+                'foo.items.bat.tags' => array(
+                    0 => 'foo',
+                ),
+                'foo.items.baz.tags' => array(
+                    0 => 'foo',
+                    1 => 'bar',
+                ),
+                'bar.items.bam.tags' => array(
+                    0 => 'baz',
+                    1 => 'bat',
+                    2 => 'bal',
+                ),
+                'bar.items.bat.tags' => array(
+                    0 => 'bat',
+                    1 => 'foo',
+                ),
+            ]
+        ];
+    
+        yield [
+            $arrData,
+            "*.*.*.*",
+            [
+                'foo.items.bak.id' => 1234,
+                'foo.items.bak.name' => 'Bak A',
+                'foo.items.bat.id' => 4567,
+                'foo.items.bat.name' => 'Bat A',
+                'foo.items.bat.tags' => array(
+                    0 => 'foo',
+                ),
+                'foo.items.baz.id' => 3210,
+                'foo.items.baz.name' => 'Baz A',
+                'foo.items.baz.tags' => array(
+                    0 => 'foo',
+                    1 => 'bar',
+                ),
+                'bar.items.bar.id' => 5687,
+                'bar.items.bar.name' => 'Bar B',
+                'bar.items.bam.id' => 3687,
+                'bar.items.bam.name' => 'Bam B',
+                'bar.items.bam.tags' => array(
+                    0 => 'baz',
+                    1 => 'bat',
+                    2 => 'bal',
+                ),
+                'bar.items.bat.id' => 9804,
+                'bar.items.bat.name' => 'Bat B',
+                'bar.items.bat.tags' => array(
+                    0 => 'bat',
+                    1 => 'foo',
+                ),
+                'bar.items.bal.id' => 6882,
+                'bar.items.bal.name' => 'Bal B',
+            ]
+        ];
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     * @dataProvider ResolveWildcardsDataProvider
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::resolveWildcards
+     * @uses \NiceshopsDev\Bean\AbstractBaseBean::findDataIgnoreWildcards
+     * @uses \NiceshopsDev\Bean\AbstractBaseBean::getObjectKeys
+     * @uses \NiceshopsDev\Bean\AbstractBaseBean::getValueAtObjectKey
+     *
+     * @param array  $arrData
+     * @param string $name
+     * @param array  $arrExpectedValue
+     *
+     * @throws BeanException
+     */
+    public function testResolveWildcards(array $arrData, string $name, array $arrExpectedValue)
+    {
+        $this->object->setFromArray($arrData);
+        
+        $actual = $this->invokeMethod($this->object, "resolveWildcards", $name);
+        $this->assertSame($actual, $arrExpectedValue);
+    }
 }

@@ -1030,6 +1030,78 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     
     
     /**
+     * @param string $name
+     *
+     * @return array    [ "<DATA_KEY>" => <VALUE>, ... ]
+     * @throws BeanException
+     */
+    protected function resolveWildcards(string $name): array
+    {
+        $arrValue = [];
+        $arrName = array_values(array_map("trim", explode(".", $name)));
+    
+        if (in_array(self::DATA_KEY_WILDCARD, $arrName)) {
+            $arrFound = $this->findDataIgnoreWildcards($name);
+            if ($arrFound["found"]) {
+                $arrValue[$name] = $arrFound["value"] ?? null;
+                return $arrValue;
+            }
+        }
+    
+        $context = $this->toArray(false);
+    
+        foreach ($arrName as $nameKey => $nameVal) {
+            if ($nameVal === self::DATA_KEY_WILDCARD) {
+                $arrContextDataKey = $this->getObjectKeys($context);
+            
+                foreach ($arrContextDataKey as $contextDataKey) {
+                    $newSearchName = $arrName;
+                    array_splice($newSearchName, $nameKey, 1, $contextDataKey);
+                    $newSearchName = implode(".", $newSearchName);
+                
+                    if ($contextDataKey === self::DATA_KEY_WILDCARD) {
+                        $arrFound = $this->findDataIgnoreWildcards($newSearchName);
+                        if ($arrFound["found"]) {
+                            $arrValue[$newSearchName] = $arrFound["value"] ?? null;
+                        }
+                        continue;
+                    }
+                
+                    if (strpos($newSearchName, self::DATA_KEY_WILDCARD) !== false) {
+                        $arrValue = array_merge($arrValue, $this->resolveWildcards($newSearchName));
+                    } else {
+                        $arrFound = $this->findDataIgnoreWildcards($newSearchName);
+                        if ($arrFound["found"]) {
+                            $arrValue[$newSearchName] = $arrFound["value"] ?? null;
+                        }
+                    }
+                }
+                break;
+            }
+        
+            list($context, $contextFound) = $this->getValueAtObjectKey($context, $nameVal);
+            if (!$contextFound) {
+                break;
+            }
+        }
+        
+        return $arrValue;
+    }
+    
+    
+    /**
+     * @param string $name
+     *
+     * @return array
+     * @throws BeanException
+     */
+    protected function findDataIgnoreWildcards(string $name): array
+    {
+        return $this->findData($name, true);
+    }
+    
+    
+    /**
      * Return an array with the following properties
      * - found          TRUE or FALSE
      * - context        where data was found or NULL
@@ -1041,11 +1113,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
      *
      * @return array
      * @throws BeanException
-     * @todo Refactore handling wildcard names  (e.g.: foo.*)
+     * @todo Refactore handling wildcard names  (e.g.: foo.*) use method "resolveWildcards"
      * @todo Refactore handling dot-notation names
      * @todo UnitTests
      */
-    protected function findData($name, $ignoreWildcards = false)
+    protected function findData(string $name, $ignoreWildcards = false)
     {
         $normalizedName = $this->normalizeDataName($name);
         $flag = array_key_exists($normalizedName, $this->data);
