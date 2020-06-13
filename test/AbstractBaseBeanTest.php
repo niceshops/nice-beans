@@ -1135,6 +1135,30 @@ class AbstractBaseBeanTest extends DefaultTestCase
      *
      * @covers \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue
      */
+    public function testNormalizeDataValue_dataTypeIsNull()
+    {
+        $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(
+            ["getDataType", "getDataTypeCallback"]
+        )->getMockForAbstractClass();
+        
+        $value = "bar";
+        $expectedValue = "bar";
+        $name = "foo";
+        $dataType = null;
+        
+        $this->object->expects($this->once())->method("getDataType")->with(...[$name])->willReturn($dataType);
+        $this->object->expects($this->never())->method("getDataTypeCallback");
+        
+        $this->assertSame($expectedValue, $this->invokeMethod($this->object, "normalizeDataValue", [$value, $name]));
+    }
+    
+    
+    /**
+     * @group  unit
+     * @small
+     *
+     * @covers \NiceshopsDev\Bean\AbstractBaseBean::normalizeDataValue
+     */
     public function testNormalizeDataValue_valueIsNotNullable()
     {
         $this->object = $this->getMockBuilder(AbstractBaseBean::class)->disableOriginalConstructor()->setMethods(

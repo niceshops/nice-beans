@@ -648,6 +648,10 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     protected function normalizeDataValue($value, string $name)
     {
         $dataType = $this->getDataType($name);
+    
+        if (null === $dataType) {
+            return $value;
+        }
         
         if (null === $value) {
             $value = $this->getDefaultValue_for_DataType($dataType);
