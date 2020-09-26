@@ -23,7 +23,7 @@ trait DatabaseBeanTrait
      */
     public function setPrimaryKey($key)
     {
-        foreach ($this->getPrimaryKeys() as $name) {
+        foreach ($this->getDatabasePrimaryKeys() as $name) {
             $this->setData($name, $key);
         }
     }
