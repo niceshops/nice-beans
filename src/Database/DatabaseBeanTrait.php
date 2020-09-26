@@ -110,7 +110,7 @@ trait DatabaseBeanTrait
             $columnTypes[] = self::COLUMN_TYPE_DEFAULT;
         }
 
-        $this->setDataType($name, $dataType);
+        $this->setDataType($name, $dataType, true);
 
         $key = $this->normalizeDataName($name);
 
@@ -141,7 +141,7 @@ trait DatabaseBeanTrait
         if (!$this->hasData($mapField)) {
             $this->setData($mapField, []);
         }
-        $this->setDataType($name, $dataType);
+        $this->setDataType($name, $dataType, true);
         $key = $this->normalizeDataName($name);
         $mapFieldKey = $this->normalizeDataName($mapField);
         if ($this->isFieldMappedToData($mapFieldKey)) {
