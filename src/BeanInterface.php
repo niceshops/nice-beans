@@ -76,10 +76,4 @@ interface BeanInterface extends ArrayAccess, IteratorAggregate, Countable
      */
     static public function createFromArray(array $arrData);
 
-    /**
-     * @param string $name
-     * @return string|null
-     */
-    public function getDataType(string $name): ?string;
-
 }

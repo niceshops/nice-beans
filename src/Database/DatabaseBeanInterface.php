@@ -65,4 +65,10 @@ interface DatabaseBeanInterface
      */
     public function getDatabaseFields(): array;
 
+    /**
+     * @param string $name
+     * @return string|null
+     */
+    public function getDataType(string $name): ?string;
+
 }
