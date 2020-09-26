@@ -50,6 +50,6 @@ interface DatabaseBeanInterface
     public function getForeignKeys(): array;
 
 
-    public function setPrimaryKey($key);
+    public function setPrimaryKeyValue($value);
 
 }

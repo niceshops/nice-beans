@@ -18,10 +18,10 @@ trait DatabaseBeanTrait
     use MappedFieldTrait;
 
     /**
-     * @param $key
+     * @param $value
      * @throws \NiceshopsDev\Bean\BeanException
      */
-    public function setPrimaryKey($value)
+    public function setPrimaryKeyValue($value)
     {
         foreach ($this->getDatabasePrimaryKeys() as $field => $dbColumn) {
             $this->setData($field, $value);
