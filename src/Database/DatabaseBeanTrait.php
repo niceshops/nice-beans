@@ -21,7 +21,7 @@ trait DatabaseBeanTrait
      * @return bool
      * @throws BeanException
      */
-    public function hasPrimaryKeyValue()
+    public function hasPrimaryKeyValue(): bool
     {
         return count($this->getPrimaryKeys()) > 0;
     }
