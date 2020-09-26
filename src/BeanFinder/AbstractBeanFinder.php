@@ -52,7 +52,7 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     /**
      * @return BeanLoaderInterface
      */
-    protected function getLoader(): BeanLoaderInterface
+    public function getLoader(): BeanLoaderInterface
     {
         return $this->loader;
     }
@@ -60,7 +60,7 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     /**
      * @return BeanFactoryInterface
      */
-    protected function getFactory(): BeanFactoryInterface
+    public function getFactory(): BeanFactoryInterface
     {
         return $this->factory;
     }

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace NiceshopsDev\Bean\BeanFinder;
 
+use NiceshopsDev\Bean\BeanFactory\BeanFactoryInterface;
 use NiceshopsDev\Bean\BeanInterface;
 use NiceshopsDev\Bean\BeanList\BeanListInterface;
 use NiceshopsDev\NiceCore\Attribute\AttributeAwareInterface;
@@ -34,4 +35,16 @@ interface BeanFinderInterface extends OptionAwareInterface, AttributeAwareInterf
      * @return BeanInterface
      */
     public function getBean(): BeanInterface;
+
+
+    /**
+     * @return BeanLoaderInterface
+     */
+    public function getLoader(): BeanLoaderInterface;
+
+    /**
+     * @return BeanFactoryInterface
+     */
+    public function getFactory(): BeanFactoryInterface;
+
 }
