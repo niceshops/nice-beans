@@ -8,6 +8,8 @@ use NiceshopsDev\Bean\BeanException;
 use NiceshopsDev\Bean\BeanFactory\BeanFactoryInterface;
 use NiceshopsDev\Bean\BeanInterface;
 use NiceshopsDev\Bean\BeanList\BeanListInterface;
+use NiceshopsDev\NiceCore\Attribute\AttributeTrait;
+use NiceshopsDev\NiceCore\Option\OptionTrait;
 
 /**
  * Class AbstractBeanFinderFactory
@@ -15,6 +17,8 @@ use NiceshopsDev\Bean\BeanList\BeanListInterface;
  */
 abstract class AbstractBeanFinder implements BeanFinderInterface
 {
+    use OptionTrait;
+    use AttributeTrait;
 
     protected const OPTION_EXECUTED = 'executed';
 
