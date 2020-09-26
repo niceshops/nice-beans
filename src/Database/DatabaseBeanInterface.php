@@ -49,7 +49,15 @@ interface DatabaseBeanInterface
      */
     public function getForeignKeys(): array;
 
-
+    /**
+     * @param $value
+     * @return mixed
+     */
     public function setPrimaryKeyValue($value);
+
+    /**
+     * @return bool
+     */
+    public function hasPrimaryKeyValue(): bool;
 
 }

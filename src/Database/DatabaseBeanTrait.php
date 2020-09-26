@@ -18,6 +18,16 @@ trait DatabaseBeanTrait
     use MappedFieldTrait;
 
     /**
+     * @return bool
+     * @throws BeanException
+     */
+    public function hasPrimaryKeyValue()
+    {
+        return count($this->getPrimaryKeys()) > 0;
+    }
+
+
+    /**
      * @param $value
      * @throws \NiceshopsDev\Bean\BeanException
      */
