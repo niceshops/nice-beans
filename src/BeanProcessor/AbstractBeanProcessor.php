@@ -80,6 +80,8 @@ abstract class AbstractBeanProcessor implements BeanProcessorInterface
         $isSaveAllowed = false;
         if ($this->hasOption(self::OPTION_SAVE_NON_EMPTY_ONLY) && $bean instanceof Countable) {
             $isSaveAllowed = $isSaveAllowed && $bean->count() > 0;
+        } else {
+            $isSaveAllowed = true;
         }
         return $isSaveAllowed;
     }
