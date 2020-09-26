@@ -792,6 +792,26 @@ abstract class AbstractBaseBeanList implements BeanListInterface
     /**
      * @param string $name
      *
+     * @return array
+     */
+    function getDataType($name)
+    {
+        $arrDataType = array();
+
+        /**
+         * @var $bean BeanInterface
+         */
+        foreach ($this as $key => $bean) {
+            $arrDataType[] = $bean->getDataType($name);
+        }
+
+        return $arrDataType;
+    }
+
+
+    /**
+     * @param string $name
+     *
      * @return mixed
      */
     function hasData($name)

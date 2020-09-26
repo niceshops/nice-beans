@@ -23,7 +23,12 @@ trait DatabaseBeanTrait
      */
     public function hasPrimaryKeyValue(): bool
     {
-        return count($this->getPrimaryKeys()) > 0;
+        foreach ($this->getDatabasePrimaryKeys() as $name => $databasePrimaryKey) {
+            if ($this->hasData($name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -31,87 +36,44 @@ trait DatabaseBeanTrait
      * @param $value
      * @throws \NiceshopsDev\Bean\BeanException
      */
-    public function setPrimaryKeyValue($value)
+    public function setPrimaryKeyValue($value): self
     {
         foreach ($this->getDatabasePrimaryKeys() as $field => $dbColumn) {
             $this->setData($field, $value);
         }
+        return $this;
     }
 
     /**
-     * @param array $arrayData
-     *
-     * @throws BeanException
-     */
-    public function setFieldsFromDatabase(array $arrayData): void
-    {
-        foreach ($this->getDatabaseFields() as $name => $dbColumnName) {
-            if (isset($arrayData[$dbColumnName])) {
-                $this->setData($this->getOriginalDataName($name), $arrayData[$dbColumnName]);
-            }
-        }
-    }
-
-
-    /**
+     * @param string|null $columnType
      * @return array
-     * @throws BeanException
      */
-    public function getFieldsForDatabase(): array
+    public function getDatabaseFieldName_Map(?string $columnType = null): array
     {
-        $arrDatabaseData = [];
-        foreach ($this->getDatabaseFields() as $name => $dbColumnName) {
-            if ($this->hasData($name)) {
-                $arrDatabaseData[$dbColumnName] = $this->getData($name);
-            }
+        switch ($columnType) {
+            case self::COLUMN_TYPE_PRIMARY_KEY:
+                return $this->getDatabasePrimaryKeys();
+            case self::COLUMN_TYPE_UNIQUE:
+                return $this->getDatabaseUniqueKeys();
+            case self::COLUMN_TYPE_FOREIGN_KEY:
+                return $this->getDatabaseForeignKeys();
         }
-        return $arrDatabaseData;
+        return $this->getDatabaseFields();
     }
 
     /**
-     * @return array
+     * @param string $name
+     * @return mixed
      * @throws BeanException
      */
-    public function getPrimaryKeys(): array
+    public function getDatabaseColumn(string $name): string
     {
-        $arrDatabaseData = [];
-        foreach (array_merge($this->getDatabasePrimaryKeys()) as $name => $dbColumnName) {
-            if ($this->hasData($name)) {
-                $arrDatabaseData[$dbColumnName] = $this->getData($name);
-            }
+        if ($this->hasDatabaseField($name)) {
+            return $this->getDatabaseField($name);
         }
-        return $arrDatabaseData;
+        throw new BeanException("No database field for name: $name.");
     }
 
-    /**
-     * @return array
-     * @throws BeanException
-     */
-    public function getUnqiqueKeys(): array
-    {
-        $arrDatabaseData = [];
-        foreach (array_merge($this->getDatabaseUniqueKeys()) as $name => $dbColumnName) {
-            if ($this->hasData($name)) {
-                $arrDatabaseData[$dbColumnName] = $this->getData($name);
-            }
-        }
-        return $arrDatabaseData;
-    }
-
-    /**
-     * @return array
-     * @throws BeanException
-     */
-    public function getForeignKeys(): array
-    {
-        $arrDatabaseData = [];
-        foreach (array_merge($this->getDatabaseForeignKeys()) as $name => $dbColumnName) {
-            if ($this->hasData($name)) {
-                $arrDatabaseData[$dbColumnName] = $this->getData($name);
-            }
-        }
-        return $arrDatabaseData;
-    }
 
     /**
      * @param string $name

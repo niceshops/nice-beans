@@ -24,7 +24,7 @@ interface BeanInterface extends ArrayAccess, IteratorAggregate, Countable
      *
      * @return BeanInterface
      */
-    function setData($name, $value);
+    public function setData($name, $value);
 
 
     /**
@@ -32,7 +32,7 @@ interface BeanInterface extends ArrayAccess, IteratorAggregate, Countable
      *
      * @return mixed
      */
-    function getData($name);
+    public function getData($name);
 
 
     /**
@@ -40,7 +40,7 @@ interface BeanInterface extends ArrayAccess, IteratorAggregate, Countable
      *
      * @return bool
      */
-    function hasData($name);
+    public function hasData($name);
 
 
     /**
@@ -48,19 +48,24 @@ interface BeanInterface extends ArrayAccess, IteratorAggregate, Countable
      *
      * @return mixed    the removed data or NULL if data couldn't be found
      */
-    function removeData($name);
+    public function removeData($name);
 
 
     /**
      * @return BeanInterface
      */
-    function resetData();
+    public function resetData();
 
+    /**
+     * @param $name
+     * @return mixed
+     */
+    public function getDataType($name);
 
     /**
      * @return array
      */
-    function toArray();
+    public function toArray();
 
 
     /**
@@ -68,7 +73,7 @@ interface BeanInterface extends ArrayAccess, IteratorAggregate, Countable
      *
      * @return mixed
      */
-    function setFromArray(array $data);
+    public function setFromArray(array $data);
 
     /**
      * @param array $arrData

@@ -23,33 +23,6 @@ interface DatabaseBeanInterface
 
 
     /**
-     * @return array
-     */
-    public function getFieldsForDatabase(): array;
-
-
-    /**
-     * @param array $arrayData
-     *
-     */
-    public function setFieldsFromDatabase(array $arrayData): void;
-
-    /**
-     * @return array
-     */
-    public function getPrimaryKeys(): array;
-
-    /**
-     * @return array
-     */
-    public function getUnqiqueKeys(): array;
-
-    /**
-     * @return array
-     */
-    public function getForeignKeys(): array;
-
-    /**
      * @param $value
      * @return mixed
      */
@@ -61,14 +34,14 @@ interface DatabaseBeanInterface
     public function hasPrimaryKeyValue(): bool;
 
     /**
+     * @param string|null $columnType
      * @return array
      */
-    public function getDatabaseFields(): array;
+    public function getDatabaseFieldName_Map(?string $columnType = null): array;
 
     /**
      * @param string $name
-     * @return string|null
+     * @return string
      */
-    public function getDataType(string $name): ?string;
-
+    public function getDatabaseColumn(string $name): string;
 }

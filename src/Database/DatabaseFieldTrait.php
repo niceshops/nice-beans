@@ -18,7 +18,7 @@ trait DatabaseFieldTrait
     /**
      * @return array
      */
-    public function getDatabaseFields(): array
+    protected function getDatabaseFields(): array
     {
         return $this->arrDatabaseFields;
     }

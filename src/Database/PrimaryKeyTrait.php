@@ -17,7 +17,7 @@ trait PrimaryKeyTrait
     /**
      * @return array
      */
-    protected function getDatabasePrimaryKeys(): array
+    public function getDatabasePrimaryKeys(): array
     {
         return $this->arrDatabasePrimaryKeys;
     }
