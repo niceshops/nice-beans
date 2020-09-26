@@ -21,10 +21,10 @@ trait DatabaseBeanTrait
      * @param $key
      * @throws \NiceshopsDev\Bean\BeanException
      */
-    public function setPrimaryKey($key)
+    public function setPrimaryKey($value)
     {
-        foreach ($this->getDatabasePrimaryKeys() as $name) {
-            $this->setData($name, $key);
+        foreach ($this->getDatabasePrimaryKeys() as $field => $dbColumn) {
+            $this->setData($field, $value);
         }
     }
 
