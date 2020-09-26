@@ -14,16 +14,16 @@ use NiceshopsDev\Bean\BeanInterface;
 /**
  * Trait JsonSerializableTrait
  *
- * can be used for classes which should implement the @see JsonSerializableInterface
+ * can be used for classes which should implement the @see JsonSerializableBeanListBeanInterface
  *
- * NOTE: requires that the class which use the trait implements the @see JsonSerializableInterface
+ * NOTE: requires that the class which use the trait implements the @see JsonSerializableBeanListBeanInterface
  * @package Niceshops\Library\Core
  * @todo    use https://docs.laminas.dev/laminas-hydrator to hydrate bean with data (fromJson) or extract data from bean (toJson)
  * @todo    UnitTests
  */
-trait JsonSerializableTrait
+trait JsonSerializableBeanTrait
 {
-    
+
     /**
      * @return array
      * @throws BeanException
@@ -33,11 +33,11 @@ trait JsonSerializableTrait
         if (method_exists($this, "getSerializeData")) {
             return $this->getSerializeData();
         }
-        
+
         throw new BeanException("Could not get data for json serialization!");
     }
-    
-    
+
+
     /**
      * @param bool $dataOnly
      *
@@ -55,11 +55,11 @@ trait JsonSerializableTrait
         } else {
             $arrData = $this->jsonSerialize();
         }
-        
+
         return json_encode($arrData);
     }
-    
-    
+
+
     /**
      * @param string $json
      * @param bool   $dataOnly
@@ -75,7 +75,7 @@ trait JsonSerializableTrait
                 if (method_exists($this, "setSerializeData")) {
                     $this->setSerializeData(array(BeanInterface::SERIALIZE_DATA_KEY => $data));
                 }
-                
+
                 throw new BeanException("Could not set data from json!");
             }
         } else {
@@ -83,15 +83,15 @@ trait JsonSerializableTrait
                 if (method_exists($this, "setSerializeData")) {
                     $this->setSerializeData($data);
                 }
-                
+
                 throw new BeanException("Could not set data from json!");
             }
         }
-        
+
         return $this;
     }
-    
-    
+
+
     /**
      * @param string $json
      *
@@ -105,8 +105,8 @@ trait JsonSerializableTrait
         } catch (\Exception $e) {
             throw new BeanException($e->getMessage(), $e->getCode(), $e->getPrevious());
         }
-        
+
         return $data;
     }
-    
+
 }

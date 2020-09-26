@@ -13,22 +13,22 @@ use JsonSerializable;
  * Interface JsonSerializableInterface
  * @package Bean
  */
-interface JsonSerializableInterface extends JsonSerializable
+interface JsonSerializableBeanInterface extends JsonSerializable
 {
-    
-    
+
+
     /**
      * @param bool $dataOnly
      *
      * @return string
      */
     public function toJson($dataOnly = false) : string;
-    
-    
+
+
     /**
      * @param string $json
      */
     public function fromJson(string $json);
-    
-    
+
+
 }

@@ -9,19 +9,15 @@ namespace NiceshopsDev\Bean;
 
 use ArrayAccess;
 use Countable;
-use Serializable;
+use IteratorAggregate;
 
 /**
  * Interface BeanInterface
  * @package Niceshops\Library\Core\Bean
  */
-interface BeanInterface extends Serializable, ArrayAccess, Countable
+interface BeanInterface extends ArrayAccess, IteratorAggregate, Countable
 {
-    
-    
-    const SERIALIZE_DATA_KEY = "data";
-    
-    
+
     /**
      * @param string $name
      * @param mixed  $value
@@ -29,48 +25,54 @@ interface BeanInterface extends Serializable, ArrayAccess, Countable
      * @return BeanInterface
      */
     function setData($name, $value);
-    
-    
+
+
     /**
      * @param string $name
      *
      * @return mixed
      */
     function getData($name);
-    
-    
+
+
     /**
      * @param string $name
      *
      * @return bool
      */
     function hasData($name);
-    
-    
+
+
     /**
      * @param string $name
      *
      * @return mixed    the removed data or NULL if data couldn't be found
      */
     function removeData($name);
-    
-    
+
+
     /**
      * @return BeanInterface
      */
     function resetData();
-    
-    
+
+
     /**
      * @return array
      */
     function toArray();
-    
-    
+
+
     /**
      * @param array $data
      *
      * @return mixed
      */
     function setFromArray(array $data);
+
+    /**
+     * @param array $arrData
+     * @return mixed
+     */
+    static public function createFromArray(array $arrData);
 }

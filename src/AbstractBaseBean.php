@@ -8,13 +8,11 @@ declare(strict_types=1);
 namespace NiceshopsDev\Bean;
 
 
+use ArrayIterator;
 use ArrayObject;
 use DateTime;
 use DateTimeInterface;
-use IteratorAggregate;
 use NiceshopsDev\Bean\BeanList\BeanListInterface;
-use NiceshopsDev\Bean\JsonSerializable\JsonSerializableInterface;
-use NiceshopsDev\Bean\JsonSerializable\JsonSerializableTrait;
 use NiceshopsDev\NiceCore\Exception;
 use NiceshopsDev\NiceCore\Helper\Object\ObjectPropertyFinder;
 use stdClass;
@@ -23,12 +21,10 @@ use stdClass;
  * Class AbstractBaseBean
  * @package NiceshopsDev\Bean
  */
-abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, JsonSerializableInterface
+abstract class AbstractBaseBean implements BeanInterface
 {
-    
-    use JsonSerializableTrait;
-    
-    
+
+
     const DATA_TYPE_CALLABLE = 'callable';
     const DATA_TYPE_STRING = 'string';
     const DATA_TYPE_ARRAY = 'array';
@@ -40,27 +36,27 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     const DATA_TYPE_DATETIME_PHP = 'datetime';
     const DATA_TYPE_OBJECT = 'object';
     const DATA_TYPE_RESOURCE = 'resource';
-    
+
     const DATA_KEY_WILDCARD = "*";
-    
+
     /**
      * @var array
      */
     private $data = [];
-    
-    
+
+
     /**
      * @var array   [ "<NORMALIZED_NAME>" => "<ORIGINAL_NAME>", ... ]
      */
     private $arrOriginalDataName = [];
-    
-    
+
+
     /**
      * @var array   [ "<NORMALIZED_NAME>" => [ "name" => "<DATA_TYPE>", "callback" => <CALLABLE>?, "nullable" => <BOOL> ], ... ]
      */
     private $arrDataType = [];
-    
-    
+
+
     /**
      * @param string $name
      * @param        $value
@@ -77,24 +73,24 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         if (is_null($name)) {
             return $this;
         }
-        
+
         //  @todo isFrozen check at FreezableBeanTrait
-        
+
         //  @todo isSealed check at SealableBeanTrait
-        
+
         $arrName = null;
         if (strpos($origName, ".") >= 1) {
             $arrName = array_values(array_map("trim", explode(".", $origName)));
-            
+
             $this->setOriginalDataName($arrName[0], $this->normalizeDataName($arrName[0]));
         } else {
             $this->setOriginalDataName($origName, $name);
         }
-        
+
         $value = $this->normalizeDataValue($value, $name);
-        
+
         //  @todo hasDataModified check at AbstractModifiedBean     // $modified = $this->hasDataModified($name, $value);
-        
+
         if ($arrName) {
             $arrName = array_values(array_map("trim", explode(".", $origName)));
             $context =& $this->data;
@@ -105,12 +101,12 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                     $contextName = $this->normalizeDataName($contextName);
                 }
                 ++$deep;
-                
+
                 if ((is_array($context) || $context instanceof ArrayObject)) {
                     if (!array_key_exists($contextName, $context) && $arrName) {
                         $context[$contextName] = [];
                     }
-                    
+
                     if (!$arrName) {
                         $context[$contextName] = $value;
                     } else {
@@ -120,7 +116,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                     if (!array_key_exists($contextName, (array)$context) && $arrName) {
                         $context->{$contextName} = new  stdClass();
                     }
-                    
+
                     if (!$arrName) {
                         $context->{$contextName} = $value;
                     } else {
@@ -141,22 +137,22 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                     break;
                 }
             }
-            
+
             unset($context);
         } else {
             $this->data[$name] = $value;
         }
-    
+
         if (is_array($value) && $this->getDataType($name) === self::DATA_TYPE_ARRAY) {
             $this->normalizeDataValue_for_normalizedDataName($name);
         }
-        
+
         //  @todo hasDataModified check at AbstractModifiedBean     // $this->touchData($name, $modified);
-        
+
         return $this;
     }
-    
-    
+
+
     /**
      * @param string $name
      *
@@ -167,7 +163,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     public function getData($name)
     {
         $data = null;
-        
+
         $result = $this->findData($name);
         if (!$result["found"]) {
             throw new BeanException(sprintf("Data '%s' not found!", $name), BeanException::ERROR_CODE_DATA_NOT_FOUND);
@@ -176,11 +172,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 $data = $result["value"];
             }
         }
-        
+
         return $data;
     }
-    
-    
+
+
     /**
      * @param string $name
      *
@@ -193,41 +189,41 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         if (!$this->hasData($name)) {
             throw new BeanException(sprintf("Data '%s' not found!", $name), BeanException::ERROR_CODE_DATA_NOT_FOUND);
         }
-        
+
         //  @todo isFrozen check at FreezableBeanTrait
-        
+
         //  @todo isSealed check at SealableBeanTrait
-        
+
         $removedData = $this->data[$name];
         unset($this->data[$name]);
-        
+
         $this->removeDataType($name);
-        
+
         $this->unsetOriginalDataName($name);
-        
+
         //  @todo remove modified meta data for removed data check at AbstractModifiedBean     // unset($this->arrModified[$name]);
-        
+
         return $removedData;
     }
-    
-    
+
+
     /**
      * @return $this
      */
     public function resetData()
     {
         //  @todo isFrozen check at FreezableBeanTrait
-        
+
         //  @todo isSealed check at SealableBeanTrait
-        
+
         $this->data = [];
-        
+
         //  @todo reset modified meta data at AbstractModifiedBean     // $this->arrModified = [];
-        
+
         return $this;
     }
-    
-    
+
+
     /**
      * @param string $name
      *
@@ -237,11 +233,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     public function hasData($name)
     {
         $result = $this->findData($name);
-        
+
         return (bool)$result["found"];
     }
-    
-    
+
+
     /**
      * @param bool $useOrigDataNames
      *
@@ -253,16 +249,16 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         if (!$useOrigDataNames) {
             return $this->data;
         }
-        
+
         $arrData = [];
         foreach ($this->data as $name => $value) {
             $arrData[$this->getOriginalDataName($name)] = $value;
         }
-        
+
         return $arrData;
     }
-    
-    
+
+
     /**
      * NOTE: existing data will be overwritten (to merge data use "mergeWithData")
      * NOTE: there will be no data reset applied before setting the passed data (a data reset has to be done explicitly with "resetData")
@@ -285,11 +281,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 if (array_key_exists($name, $arrData)) {
                     continue;
                 }
-                
+
                 if (strpos($name, ".") < 1) {
                     continue;
                 }
-                
+
                 $arrNamePart = explode(".", $name);
                 $context = $arrData;
                 $dataFound = true;
@@ -304,7 +300,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                         $dataFound = false;
                         break;
                     }
-                    
+
                     $context = $finder->getValue($namePart);
                 }
                 if ($dataFound) {
@@ -315,15 +311,15 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             }
             $arrData = array_intersect_key($arrData, array_flip($arrName));
         }
-        
+
         foreach ($arrData as $name => $value) {
             $this->setData($name, $value);
         }
-        
+
         return $this;
     }
-    
-    
+
+
     /**
      * @param $name
      *
@@ -335,17 +331,17 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         if (is_string($name) && array_key_exists($name, $this->data)) {
             return $name;
         }
-        
+
         $name = strtolower(trim($name));
-        
+
         if (!strlen($name)) {
             throw new BeanException("Invalid data name defined!");
         }
-        
+
         return $name;
     }
-    
-    
+
+
     /**
      * @param string $originalName
      * @param string $normalizedName
@@ -355,11 +351,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     protected function setOriginalDataName(string $originalName, string $normalizedName)
     {
         $this->arrOriginalDataName[$normalizedName] = $originalName;
-        
+
         return $this;
     }
-    
-    
+
+
     /**
      * @param string $normalizedName
      *
@@ -370,11 +366,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         if (array_key_exists($normalizedName, $this->arrOriginalDataName)) {
             return $this->arrOriginalDataName[$normalizedName];
         }
-        
+
         return $normalizedName;
     }
-    
-    
+
+
     /**
      * @param string $normalizedName
      *
@@ -385,11 +381,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         if (array_key_exists($normalizedName, $this->arrOriginalDataName)) {
             unset($this->arrOriginalDataName[$normalizedName]);
         }
-        
+
         return $this;
     }
-    
-    
+
+
     /**
      * @param string   $name
      * @param callable $callable
@@ -401,8 +397,8 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     {
         return $this->setDataType($name, self::DATA_TYPE_CALLABLE, false, $callable);
     }
-    
-    
+
+
     /**
      * @param string $name
      * @param string $dataType
@@ -414,8 +410,8 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     {
         return $this->setDataType($name, $dataType, true);
     }
-    
-    
+
+
     /**
      * @param string        $name
      * @param string        $dataType
@@ -429,12 +425,12 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     {
         do {
             //  @todo isFrozen check at FreezableBeanTrait
-            
+
             //  @todo isSealed check at SealableBeanTrait
-            
+
             $dataType = $this->normalizeDataType($dataType);
             $normalizedDataName = $this->normalizeDataName($name);
-            
+
             if ($this->hasParentDataName($normalizedDataName)) {
                 $this->setDataType_to_Parent($normalizedDataName, self::DATA_TYPE_ARRAY);
                 if (self::DATA_TYPE_ARRAY !== $this->getDataType_from_Parent($normalizedDataName)) {
@@ -446,7 +442,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                     );
                 }
             }
-            
+
             if ($dataType === self::DATA_TYPE_CALLABLE) {
                 if (null === $callable) {
                     throw new BeanException(sprintf("No callable passed for '%s' datatype!", $dataType));
@@ -478,14 +474,14 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                     sprintf("Try to set invalid datatype '%s' for data '%s'!", $dataType, $name), BeanException::ERROR_CODE_INVALID_DATA_TYPE
                 );
             }
-            
+
             $this->setOriginalDataName($name, $normalizedDataName);
         } while (false);
-        
+
         return $this;
     }
-    
-    
+
+
     /**
      * @param string $name
      *
@@ -498,15 +494,15 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         } catch (BeanException $e) {
             return null;
         }
-        
+
         if (isset($this->arrDataType[$key]) && is_array($this->arrDataType[$key])) {
             return $this->arrDataType[$key];
         }
-        
+
         return null;
     }
-    
-    
+
+
     /**
      * @param string $name  data name
      *
@@ -518,11 +514,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         if (isset($data["name"]) && is_string($data["name"])) {
             return $data["name"];
         }
-        
+
         return null;
     }
-    
-    
+
+
     /**
      * @param string $name
      *
@@ -533,8 +529,8 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         $data = $this->getDataTypeData($name);
         return (bool)($data["nullable"] ?? false);
     }
-    
-    
+
+
     /**
      * @param string $name  data name
      *
@@ -546,7 +542,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         if (isset($data["callback"]) && is_callable($data["callback"])) {
             return $data["callback"];
         }
-        
+
         $dataType = $this->getDataType($name);
         if (null !== $dataType) {
             $methodName = "normalizeDataValue_" . $dataType;
@@ -554,11 +550,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 return [$this, $methodName];
             }
         }
-    
+
         return null;
     }
-    
-    
+
+
     /**
      * @param string $name
      *
@@ -569,11 +565,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         if (array_key_exists($name, $this->arrDataType)) {
             unset($this->arrDataType[$name]);
         }
-        
+
         return $this;
     }
-    
-    
+
+
     /**
      * @param string $dataType
      *
@@ -587,57 +583,57 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             case "boolean":
                 $dataType = self::DATA_TYPE_BOOL;
                 break;
-            
+
             case self::DATA_TYPE_INT:
             case "integer":
                 $dataType = "int";
                 break;
-            
+
             case self::DATA_TYPE_FLOAT:
             case "double":
                 $dataType = self::DATA_TYPE_FLOAT;
                 break;
-            
+
             case self::DATA_TYPE_STRING:
             case "str":
                 $dataType = self::DATA_TYPE_STRING;
                 break;
-            
+
             case self::DATA_TYPE_ARRAY:
             case "arr":
                 $dataType = self::DATA_TYPE_ARRAY;
                 break;
-            
+
             case self::DATA_TYPE_DATETIME_PHP:
             case self::DATA_TYPE_DATE;
                 $dataType = self::DATA_TYPE_DATETIME_PHP;
                 break;
-            
+
             case self::DATA_TYPE_OBJECT:
             case "obj";
                 $dataType = self::DATA_TYPE_OBJECT;
                 break;
-            
+
             case self::DATA_TYPE_RESOURCE:
             case "res";
                 $dataType = self::DATA_TYPE_RESOURCE;
                 break;
-    
+
             case self::DATA_TYPE_ITERABLE:
             case "iter";
                 $dataType = self::DATA_TYPE_ITERABLE;
                 break;
-    
+
             case self::DATA_TYPE_CALLABLE:
             case "callback";
                 $dataType = self::DATA_TYPE_CALLABLE;
                 break;
         }
-        
+
         return $dataType;
     }
-    
-    
+
+
     /**
      * @param mixed  $value
      * @param string $name
@@ -648,28 +644,28 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     protected function normalizeDataValue($value, string $name)
     {
         $dataType = $this->getDataType($name);
-    
+
         if (null === $dataType) {
             return $value;
         }
-        
+
         if (null === $value) {
             $value = $this->getDefaultValue_for_DataType($dataType);
         }
-        
+
         if (null === $value && !$this->getDataTypeNullable($name)) {
             throw new BeanException(sprintf("Data '%s' can not be NULL!", $name), BeanException::ERROR_CODE_DATA_IS_NOT_NULLABLE);
         }
-        
+
         $callback = $this->getDataTypeCallback($name);
         if (null !== $callback) {
             return call_user_func($callback, $value, $name, $this);
         }
-        
+
         return $value;
     }
-    
-    
+
+
     /**
      * @param $value
      *
@@ -683,11 +679,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         if (is_null($value)) {
             throw new BeanException(sprintf("Invalid value '%s' for data type 'boolean'!", is_scalar($origValue) ? (string)$origValue : "NOT_A_SCALAR_VALUE"), BeanException::ERROR_CODE_INVALID_DATA_VALUE);
         }
-        
+
         return $value;
     }
-    
-    
+
+
     /**
      * @param $value
      *
@@ -709,11 +705,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 BeanException::ERROR_CODE_INVALID_DATA_VALUE
             );
         }
-        
+
         return $value;
     }
-    
-    
+
+
     /**
      * @param $value
      *
@@ -733,11 +729,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 BeanException::ERROR_CODE_INVALID_DATA_VALUE
             );
         }
-        
+
         return $value;
     }
-    
-    
+
+
     /**
      * @param $value
      *
@@ -760,11 +756,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 BeanException::ERROR_CODE_INVALID_DATA_VALUE
             );
         }
-        
+
         return $value;
     }
-    
-    
+
+
     /**
      * @param $value
      *
@@ -782,13 +778,13 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 $value = json_decode($trimmedValue);
             }
         }
-        
+
         $value = (array)$value;
-        
+
         return $value;
     }
-    
-    
+
+
     /**
      * @param $value
      *
@@ -808,11 +804,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 );
             }
         }
-        
+
         return $value;
     }
-    
-    
+
+
     /**
      * @param $value
      *
@@ -843,11 +839,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 );
             }
         }
-    
+
         return $value;
     }
-    
-    
+
+
     /**
      * @param $value
      *
@@ -869,8 +865,8 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         }
         return $value;
     }
-    
-    
+
+
     /**
      * @param $value
      *
@@ -889,11 +885,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 BeanException::ERROR_CODE_INVALID_DATA_VALUE
             );
         }
-        
+
         return $value;
     }
-    
-    
+
+
     /**
      * @param $value
      *
@@ -909,11 +905,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 BeanException::ERROR_CODE_INVALID_DATA_VALUE
             );
         }
-        
+
         return $value;
     }
-    
-    
+
+
     /**
      * @param string $normalizedDataName
      *
@@ -926,17 +922,17 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         if (!$arrDataName_with_DataTypeDefinition) {
             return $this;
         }
-        
+
         sort($arrDataName_with_DataTypeDefinition);
-        
+
         foreach ($arrDataName_with_DataTypeDefinition as $dataName) {
             $this->setData($dataName, $this->getData_with_DefaultValue($dataName));
         }
-        
+
         return $this;
     }
-    
-    
+
+
     /**
      * @param string $name
      *
@@ -952,11 +948,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         } else {
             $dataValue = null;
         }
-        
+
         return $dataValue;
     }
-    
-    
+
+
     /**
      * @param string $dataType
      *
@@ -968,15 +964,15 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             case self::DATA_TYPE_ARRAY:
                 $dataValue = [];
                 break;
-            
+
             default:
                 $dataValue = null;
         }
-        
+
         return $dataValue;
     }
-    
-    
+
+
     /**
      * @return array
      */
@@ -984,12 +980,12 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     {
         return $this->arrDataType;
     }
-    
-    
+
+
     /**
      * @return string[]
      */
-    protected function getValidDataType_List(): array 
+    protected function getValidDataType_List(): array
     {
         return [
             self::DATA_TYPE_CALLABLE,
@@ -1005,8 +1001,8 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             self::DATA_TYPE_RESOURCE,
         ];
     }
-    
-    
+
+
     /**
      * @param string $normalizedDataNamePrefix
      * @param bool   $ignoreSelf
@@ -1020,15 +1016,15 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             return strpos($key, $normalizedDataNamePrefix . ".") === 0;
         }
         );
-        
+
         if (!$ignoreSelf && $this->getDataType($normalizedDataNamePrefix)) {
             array_unshift($arrDataTypeName, $normalizedDataNamePrefix);
         }
-        
+
         return array_values($arrDataTypeName);
     }
-    
-    
+
+
     /**
      * @param string $name
      *
@@ -1039,7 +1035,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     {
         $arrValue = [];
         $arrName = array_values(array_map("trim", explode(".", $name)));
-    
+
         if (in_array(self::DATA_KEY_WILDCARD, $arrName)) {
             $arrFound = $this->findDataIgnoreWildcards($name);
             if ($arrFound["found"]) {
@@ -1047,18 +1043,18 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 return $arrValue;
             }
         }
-    
+
         $context = $this->toArray(false);
-    
+
         foreach ($arrName as $nameKey => $nameVal) {
             if ($nameVal === self::DATA_KEY_WILDCARD) {
                 $arrContextDataKey = $this->getObjectKeys($context);
-            
+
                 foreach ($arrContextDataKey as $contextDataKey) {
                     $newSearchName = $arrName;
                     array_splice($newSearchName, $nameKey, 1, $contextDataKey);
                     $newSearchName = implode(".", $newSearchName);
-                
+
                     if ($contextDataKey === self::DATA_KEY_WILDCARD) {
                         $arrFound = $this->findDataIgnoreWildcards($newSearchName);
                         if ($arrFound["found"]) {
@@ -1066,7 +1062,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                         }
                         continue;
                     }
-                
+
                     if (strpos($newSearchName, self::DATA_KEY_WILDCARD) !== false) {
                         $arrValue = array_merge($arrValue, $this->resolveWildcards($newSearchName));
                     } else {
@@ -1078,17 +1074,17 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 }
                 break;
             }
-        
+
             list($context, $contextFound) = $this->getValueAtObjectKey($context, $nameVal);
             if (!$contextFound) {
                 break;
             }
         }
-        
+
         return $arrValue;
     }
-    
-    
+
+
     /**
      * @param string $name
      *
@@ -1099,8 +1095,8 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     {
         return $this->findData($name, true);
     }
-    
-    
+
+
     /**
      * Return an array with the following properties
      * - found          TRUE or FALSE
@@ -1123,7 +1119,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         $flag = array_key_exists($normalizedName, $this->data);
         $value = $contextName = null;
         $context = null;
-        
+
         if (!$flag) {
             if ($name === self::DATA_KEY_WILDCARD) {
                 $flag = true;
@@ -1133,23 +1129,23 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 if ($arrFound["found"]) {
                     return $arrFound;
                 }
-                
+
                 $arrSearchName = [$name];
                 $searchNameWithWildcardsCount = 1;
                 $killer = 0;
-                
-                
+
+
                 while ($searchNameWithWildcardsCount >= 1 && $killer < 100) {
                     ++$killer;
-                    
+
                     foreach ($arrSearchName as $searchNameKey => $searchName) {
                         if (is_array($searchName)) {
                             continue;
                         }
-                        
+
                         $context = $this->data;
                         $arrName = array_values(array_map("trim", explode(".", $searchName)));
-                        
+
                         if (in_array(self::DATA_KEY_WILDCARD, $arrName)) {
                             $arrFound = $this->findData($searchName, true);
                             if ($arrFound["found"]) {
@@ -1158,19 +1154,19 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                                 continue;
                             }
                         }
-                        
+
                         foreach ($arrName as $nameKey => $nameVal) {
                             if ($nameVal === self::DATA_KEY_WILDCARD) {
                                 $arrKey = $this->getObjectKeys($context);
                                 --$searchNameWithWildcardsCount;
                                 unset($arrSearchName[$searchNameKey]);
-                                
-                                
+
+
                                 foreach ($arrKey as $key) {
                                     $newSearchName = $arrName;
                                     array_splice($newSearchName, $nameKey, 1, $key);
                                     $newSearchName = implode(".", $newSearchName);
-                                    
+
                                     if ($key === self::DATA_KEY_WILDCARD) {
                                         $arrFound = $this->findData($newSearchName, true);
                                         if ($arrFound["found"]) {
@@ -1178,7 +1174,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                                         }
                                         continue;
                                     }
-                                    
+
                                     if (strpos($newSearchName, self::DATA_KEY_WILDCARD) !== false) {
                                         ++$searchNameWithWildcardsCount;
                                     }
@@ -1186,7 +1182,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                                 }
                                 break;
                             }
-                            
+
                             list($context, $contextFound) = $this->getValueAtObjectKey($context, $nameVal);
                             if (!$contextFound) {
                                 --$searchNameWithWildcardsCount;
@@ -1196,7 +1192,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                         }
                     }
                 }
-                
+
                 if (!$flag) {
                     $value = [];
                     foreach ($arrSearchName as $searchName) {
@@ -1211,14 +1207,14 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                             }
                         }
                     }
-                    
+
                     if (count($value) > 0) {
                         $flag = true;
                     }
                 }
             } elseif (strpos($name, ".") >= 1) {
                 $arrName = array_values(array_map("trim", explode(".", $name)));
-                
+
                 if (!array_key_exists($this->normalizeDataName($arrName[0]), $this->data)) {
                     $dataType = $this->getDataType($arrName[0]);
                     if ($dataType) {
@@ -1227,25 +1223,25 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                     if (is_callable($value)) {
                         $value = call_user_func($value, $arrName[0]);
                     }
-                    
+
                     $this->setData($arrName[0], $value);
                 }
-                
+
                 $context = $this->data;
-                
+
                 $deep = 1;
                 while ($deep < 100 && count($arrName) && $context) {
                     $contextName = array_shift($arrName);
                     if ($deep == 1) {
                         $contextName = $this->normalizeDataName($contextName);
                     }
-                    
+
                     $oldContext = $context;
                     list($context, $contextFound) = $this->getValueAtObjectKey($context, $contextName);
                     if ($contextFound && !$arrName) {
                         $flag = true;
                     }
-                    
+
                     if (!$arrName) {
                         $value = $context;
                         $context = $oldContext;
@@ -1254,7 +1250,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                             $context = null;
                         }
                     }
-                    
+
                     ++$deep;
                 }
             }
@@ -1263,7 +1259,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             $context = $this->data;
             $value = $this->data[$normalizedName];
         }
-        
+
         return [
             "found" => $flag,
             "key" => $flag ? $contextName : null,
@@ -1271,8 +1267,8 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             "context" => $flag ? $context : null,
         ];
     }
-    
-    
+
+
     /**
      * @param $object
      *
@@ -1281,7 +1277,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     protected function getObjectKeys($object): array
     {
         $arrKey = [];
-        
+
         try {
             if (is_array($object)) {
                 $arrKey = ObjectPropertyFinder::createFromArray($object)->getKeys();
@@ -1290,11 +1286,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             }
         } catch (Exception $e) {
         }
-        
+
         return $arrKey;
     }
-    
-    
+
+
     /**
      * @param $object
      * @param $key
@@ -1304,7 +1300,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     protected function getValueAtObjectKey($object, $key): array
     {
         $found = false;
-        
+
         if (($object instanceof BeanInterface)) {
             if ($object instanceof BeanListInterface && (string)(int)$key === (string)$key) {
                 if ($object->offsetExists($key)) {
@@ -1325,7 +1321,7 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
             } catch (Exception $e) {
                 $finder = null;
             }
-            
+
             if ($finder) {
                 $found = $finder->hasKey($key);
                 $object = $finder->getValue($key);
@@ -1333,11 +1329,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 $object = null;
             }
         }
-        
+
         return [$object, $found];
     }
-    
-    
+
+
     /**
      * Return parent name for dot notation data names
      * e.g.: the parent name for "foo.bar.baz" is "foo.bar"
@@ -1353,11 +1349,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
         if (false !== ($lastDotPos = strrpos($name, "."))) {
             $parentName = substr($name, 0, $lastDotPos);
         }
-        
+
         return $parentName;
     }
-    
-    
+
+
     /**
      * @param string $name
      *
@@ -1367,8 +1363,8 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     {
         return null !== $this->getParentDataName($name);
     }
-    
-    
+
+
     /**
      * @param string $name
      * @param string $dataType
@@ -1384,11 +1380,11 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
                 $this->setDataType($parentName, $dataType);
             }
         }
-        
+
         return $this;
     }
-    
-    
+
+
     /**
      * @param string $name
      *
@@ -1397,10 +1393,88 @@ abstract class AbstractBaseBean implements BeanInterface, IteratorAggregate, Jso
     protected function getDataType_from_Parent(string $name): ?string
     {
         $dataType = null;
-        
+
         if (($parentName = $this->getParentDataName($name))) {
             $dataType = $this->getDataType($parentName);
         }
         return $dataType;
+    }
+
+
+    /**
+     * @return ArrayIterator
+     */
+    public function getIterator()
+    {
+        return new ArrayIterator($this->toArray());
+    }
+
+    /**
+     * @param mixed $offset
+     *
+     * @return mixed
+     * @throws BeanException
+     */
+    public function offsetExists($offset)
+    {
+        return $this->hasData($offset) && null !== $this->getData($offset);
+    }
+
+
+    /**
+     * @param mixed $offset
+     *
+     * @return mixed
+     * @throws BeanException
+     */
+    public function offsetGet($offset)
+    {
+        return $this->getData($offset);
+    }
+
+    /**
+     * @param mixed $offset
+     * @param mixed $value
+     *
+     * @return $this
+     * @throws BeanException
+     */
+    public function offsetSet($offset, $value)
+    {
+        return $this->setData($offset, $value);
+    }
+
+    /**
+     * @param mixed $offset
+     *
+     * @return mixed
+     * @throws BeanException
+     */
+    public function offsetUnset($offset)
+    {
+        return $this->removeData($offset);
+    }
+
+    /**
+     * @return int|void
+     */
+    public function count()
+    {
+        return count($this->toArray());
+    }
+
+
+    /**create
+     *
+     * @param array $arrData
+     *
+     * @return static
+     * @throws BeanException
+     */
+    static public function createFromArray(array $arrData)
+    {
+        $bean = new static();
+        $bean->setFromArray($arrData);
+        return $bean;
     }
 }
