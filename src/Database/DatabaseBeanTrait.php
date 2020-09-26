@@ -50,15 +50,25 @@ trait DatabaseBeanTrait
      */
     public function getDatabaseFieldName_Map(?string $columnType = null): array
     {
+        $field_Map = [];
         switch ($columnType) {
             case self::COLUMN_TYPE_PRIMARY_KEY:
-                return $this->getDatabasePrimaryKeys();
+                $field_Map = $this->getDatabasePrimaryKeys();
+                break;
             case self::COLUMN_TYPE_UNIQUE:
-                return $this->getDatabaseUniqueKeys();
+                $field_Map = $this->getDatabaseUniqueKeys();
+                break;
             case self::COLUMN_TYPE_FOREIGN_KEY:
-                return $this->getDatabaseForeignKeys();
+                $field_Map = $this->getDatabaseForeignKeys();
+                break;
+            default:
+                $field_Map = $this->getDatabaseFields();
         }
-        return $this->getDatabaseFields();
+        $result = [];
+        foreach ($field_Map as $normalizedName => $dbColumn) {
+            $result[$this->getOriginalDataName($normalizedName)] = $dbColumn;
+        }
+        return $result;
     }
 
     /**
@@ -68,6 +78,7 @@ trait DatabaseBeanTrait
      */
     public function getDatabaseColumn(string $name): string
     {
+        $name = $this->normalizeDataName($name);
         if ($this->hasDatabaseField($name)) {
             return $this->getDatabaseField($name);
         }
