@@ -1,10 +1,15 @@
 <?php
+declare(strict_types=1);
 
 
 namespace NiceshopsDev\Bean\Serializable;
 
 use NiceshopsDev\Bean\BeanException;
 
+/**
+ * Trait SerializableBeanTrait
+ * @package NiceshopsDev\Bean\Serializable
+ */
 trait SerializableBeanTrait
 {
     /**
@@ -57,6 +62,11 @@ trait SerializableBeanTrait
         return serialize($this->getSerializeData());
     }
 
+    /**
+     * @param $serialized
+     * @return SerializableBeanTrait
+     * @throws BeanException
+     */
     public function unserialize($serialized)
     {
         return $this->setSerializeData(unserialize($serialized));

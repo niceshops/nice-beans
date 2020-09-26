@@ -1,5 +1,7 @@
 <?php
-namespace Niceshops\Library\Core\Bean\DatabaseBean;
+declare(strict_types=1);
+
+namespace NiceshopsDev\Bean\Database;
 
 /**
  * Trait DatabaseFieldTrait
@@ -7,12 +9,12 @@ namespace Niceshops\Library\Core\Bean\DatabaseBean;
  */
 trait DatabaseFieldTrait
 {
-    
+
     /**
      * @var array
      */
     private $arrDatabaseFields = [];
-    
+
     /**
      * @return array
      */
@@ -20,7 +22,7 @@ trait DatabaseFieldTrait
     {
         return $this->arrDatabaseFields;
     }
-    
+
     /**
      * @param string $key
      * @param string $dbColumnName
@@ -29,7 +31,7 @@ trait DatabaseFieldTrait
     {
         $this->arrDatabaseFields[$key] = $dbColumnName;
     }
-    
+
     /**
      * @param string $key
      *
@@ -39,7 +41,7 @@ trait DatabaseFieldTrait
     {
         return $this->arrDatabaseFields[$key];
     }
-    
+
     /**
      * @param string $key
      *
@@ -49,5 +51,5 @@ trait DatabaseFieldTrait
     {
         return isset($this->arrDatabaseFields[$key]);
     }
-    
+
 }

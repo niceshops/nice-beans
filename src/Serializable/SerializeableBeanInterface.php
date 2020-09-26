@@ -1,13 +1,29 @@
 <?php
+declare(strict_types=1);
 
 namespace NiceshopsDev\Bean\Serializable;
 
 
-interface SerializeableBeanInterface extends \Serializable
+use Serializable;
+
+/**
+ * Interface SerializeableBeanInterface
+ * @package NiceshopsDev\Bean\Serializable
+ */
+interface SerializeableBeanInterface extends Serializable
 {
-    private const SERIALIZE_DATA_KEY = "data";
-    private const SERIALIZE_DATA_TYPE_KEY = "arrDataType";
-    private const SELF_REFERENCE_PLACEHOLDER = "__THIS__";
+    /**
+     *
+     */
+    protected const SERIALIZE_DATA_KEY = "data";
+    /**
+     *
+     */
+    protected const SERIALIZE_DATA_TYPE_KEY = "arrDataType";
+    /**
+     *
+     */
+    protected const SELF_REFERENCE_PLACEHOLDER = "__THIS__";
 
     /**
      * @param array $data

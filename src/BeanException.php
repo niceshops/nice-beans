@@ -16,7 +16,7 @@ use NiceshopsDev\NiceCore\Exception;
 class BeanException extends Exception
 {
 
-    
+
     const ERROR_CODE_DATA_NOT_FOUND = 1000;
     const ERROR_CODE_INVALID_DATA_VALUE = 1001;
     const ERROR_CODE_INVALID_DATA_TYPE = 1002;

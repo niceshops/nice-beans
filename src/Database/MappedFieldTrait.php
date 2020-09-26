@@ -1,7 +1,9 @@
 <?php
-namespace Niceshops\Library\Core\Bean\DatabaseBean;
+declare(strict_types=1);
 
-use Niceshops\Library\Core\Bean\BeanException;
+namespace NiceshopsDev\Bean\Database;
+
+use NiceshopsDev\Bean\BeanException;
 
 /**
  * Trait MappedFieldTrait
@@ -9,12 +11,12 @@ use Niceshops\Library\Core\Bean\BeanException;
  */
 trait MappedFieldTrait
 {
-    
+
     /**
      * @var array
      */
     private $arrMappedFields = [];
-    
+
     /**
      * @return array
      */
@@ -22,7 +24,7 @@ trait MappedFieldTrait
     {
         return $this->arrMappedFields;
     }
-    
+
     /**
      * @param string $key
      * @param string $mapFieldKey
@@ -31,7 +33,7 @@ trait MappedFieldTrait
     {
         $this->arrMappedFields[$key] = $mapFieldKey;
     }
-    
+
     /**
      * @param string $key
      *
@@ -41,7 +43,7 @@ trait MappedFieldTrait
     {
         return $this->arrMappedFields[$key];
     }
-    
+
     /**
      * @param string $key
      *
@@ -51,7 +53,7 @@ trait MappedFieldTrait
     {
         return isset($this->arrMappedFields[$key]);
     }
-    
+
     /**
      * @param string $key
      *
@@ -61,7 +63,7 @@ trait MappedFieldTrait
     {
         return in_array($key, $this->getMappedFields());
     }
-    
+
     /**
      * @param $name
      * @param $value
@@ -73,30 +75,28 @@ trait MappedFieldTrait
     {
         $key = $this->normalizeDataName($name);
         if ($this->isFieldMappedToData($key) && $this->hasData($this->getMappedField($key))) {
-            return parent::setData($this->getMappedField($key) .  "." . $key, $value);
+            return parent::setData($this->getMappedField($key) . "." . $key, $value);
         }
-        
-         return parent::setData($name, $value);
+
+        return parent::setData($name, $value);
     }
-    
+
     /**
      * @param $name
      *
      * @return mixed
-     * @throws \Datenkraft_Exception
-     * @throws \Zend_Date_Exception
+     * @throws BeanException
      */
     public function getData($name)
     {
         $key = $this->normalizeDataName($name);
         if ($this->isFieldMappedToData($key)) {
-            return parent::getData($this->getMappedField($key) .  "." . $key);
+            return parent::getData($this->getMappedField($key) . "." . $key);
         }
-        
+
         return parent::getData($name);
     }
-    
-    
+
     /**
      * @param string $name
      *
@@ -107,47 +107,9 @@ trait MappedFieldTrait
     {
         $key = $this->normalizeDataName($name);
         if ($this->isFieldMappedToData($key)) {
-            return parent::hasData($this->getMappedField($key) .  "." . $key);
+            return parent::hasData($this->getMappedField($key) . "." . $key);
         }
-        
+
         return parent::hasData($name);
     }
-    
-    /**
-     * @throws BeanException
-     * @throws \Datenkraft_Exception
-     * @throws \Zend_Date_Exception
-     */
-    protected function initializeDataFromMappedFields()
-    {
-        foreach ($this->getMappedFields() as $name => $mappedField) {
-            if ($this->hasData($mappedField)) {
-                $mappedData = $this->getData($mappedField);
-                if (isset($mappedData[$name])) {
-                    $this->setData($name, $mappedData[$name]);
-                }
-            }
-        }
-    }
-    
-    /**
-     * @throws BeanException
-     * @throws \Datenkraft_Exception
-     * @throws \Zend_Date_Exception
-     */
-    protected function initializeMappedFieldsFromData()
-    {
-        foreach ($this->getMappedFields() as $name => $mappedField) {
-            if ($this->hasData($name)) {
-                $mappedData = [];
-                if ($this->hasData($mappedField)) {
-                    $mappedData = $this->getData($mappedField);
-                }
-                $mappedData[$name] = $this->getData($name);
-                $this->setData($mappedField, $mappedData);
-            }
-        }
-    }
-  
-    
 }

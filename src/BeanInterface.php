@@ -20,7 +20,7 @@ interface BeanInterface extends ArrayAccess, IteratorAggregate, Countable
 
     /**
      * @param string $name
-     * @param mixed  $value
+     * @param mixed $value
      *
      * @return BeanInterface
      */

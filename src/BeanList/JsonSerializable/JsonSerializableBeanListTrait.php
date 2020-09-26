@@ -17,5 +17,4 @@ use NiceshopsDev\Bean\JsonSerializable\JsonSerializableBeanTrait;
 trait JsonSerializableBeanListTrait
 {
     use JsonSerializableBeanTrait;
-
 }

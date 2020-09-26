@@ -1,19 +1,16 @@
 <?php
-namespace Niceshops\Library\Core\Bean\DatabaseBean;
+declare(strict_types=1);
 
-use Niceshops\Library\Core\Bean\AbstractBean;
-use Niceshops\Library\Core\Bean\BackendBean\BackendBeanInterface;
-use Niceshops\Library\Core\Bean\BackendBean\BackendBeanTrait;
-use Niceshops\Library\Core\Bean\BeanException;
-use NiceshopsDev\Bean\AbstractBaseBean;
+namespace NiceshopsDev\Bean\Database;
+
+use NiceshopsDev\Bean\JsonSerializable\AbstractJsonSerializableBean;
 
 
 /**
  * Class AbstractDatabaseBean
  * @package Niceshops\Library\Core\Bean\DatabaseBean
  */
-abstract class AbstractDatabaseBean extends AbstractBaseBean implements DatabaseBeanInterface
+abstract class AbstractDatabaseBean extends AbstractJsonSerializableBean implements DatabaseBeanInterface
 {
     use DatabaseBeanTrait;
-
 }

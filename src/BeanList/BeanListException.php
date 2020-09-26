@@ -7,13 +7,12 @@ declare(strict_types=1);
 
 namespace NiceshopsDev\Bean\BeanList;
 
-use NiceshopsDev\NiceCore\Exception;
+use NiceshopsDev\Bean\BeanException;
 
 /**
  * Class BeanException
  * @package NiceshopsDev\Bean
  */
-class BeanListException extends Exception
+class BeanListException extends BeanException
 {
-    const ERROR_CODE_DATA_NOT_FOUND = 1000;
 }

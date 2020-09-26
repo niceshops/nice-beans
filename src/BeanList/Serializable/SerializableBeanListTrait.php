@@ -3,10 +3,15 @@ declare(strict_types=1);
 
 namespace NiceshopsDev\Bean\BeanList\Serializable;
 
+use Exception;
 use NiceshopsDev\Bean\AbstractBaseBean;
 use NiceshopsDev\Bean\BeanInterface;
 use NiceshopsDev\Bean\BeanList\BeanListException;
 
+/**
+ * Trait SerializableBeanListTrait
+ * @package NiceshopsDev\Bean\BeanList\Serializable
+ */
 trait SerializableBeanListTrait
 {
     /**
@@ -74,7 +79,7 @@ trait SerializableBeanListTrait
                              */
                             $beanClass = $arrBeanClassMap[$key];
                             $arrBean[] = $beanClass::createFromArray($val);
-                        } catch (\Exception $e) {
+                        } catch (Exception $e) {
                             throw new BeanListException($e->getMessage(), $e->getCode(), $e);
                         }
                     }

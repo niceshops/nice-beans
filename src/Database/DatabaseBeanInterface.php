@@ -1,7 +1,7 @@
 <?php
+declare(strict_types=1);
 
-namespace Niceshops\Library\Core\Bean\DatabaseBean;
-
+namespace NiceshopsDev\Bean\Database;
 
 
 /**
@@ -22,36 +22,30 @@ interface DatabaseBeanInterface
     const SERIALIZE_DATABASE_MAPPED_FIELDS_KEY = "arrDatabaseMappedFields";
 
 
-
     /**
      * @return array
      */
-    public function getFieldsForDatabase () : array;
+    public function getFieldsForDatabase(): array;
 
 
     /**
      * @param array $arrayData
      *
      */
-    public function setFieldsFromDatabase(array $arrayData) : void;
-
-
-    /**
-     * @param bool $includeForeignKeys
-     *
-     * @return string
-     */
-    public function getDatabaseViewID(bool $includeForeignKeys = false) : string;
+    public function setFieldsFromDatabase(array $arrayData): void;
 
     /**
-     * @param string $viewID
+     * @return array
      */
-    public function setDatabaseViewID(string $viewID) : void;
+    public function getPrimaryKeys(): array;
 
     /**
-     * @param bool $includeForeignKeys
+     * @return array
      */
-    public function removeDatabaseViewID(bool $includeForeignKeys = false) : void;
+    public function getUnqiqueKeys(): array;
 
-
+    /**
+     * @return array
+     */
+    public function getForeignKeys(): array;
 }

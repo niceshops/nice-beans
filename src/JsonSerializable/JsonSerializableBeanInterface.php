@@ -22,7 +22,7 @@ interface JsonSerializableBeanInterface extends JsonSerializable
      *
      * @return string
      */
-    public function toJson($dataOnly = false) : string;
+    public function toJson($dataOnly = false): string;
 
 
     /**

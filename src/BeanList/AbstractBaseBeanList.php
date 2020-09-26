@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 namespace NiceshopsDev\Bean\BeanList;
+
 use ArrayIterator;
 use Exception;
 use NiceshopsDev\Bean\BeanInterface;
@@ -32,7 +33,6 @@ abstract class AbstractBaseBeanList implements BeanListInterface
      * @var array
      */
     protected $arrBeanClass = array(BeanInterface::class);
-
 
 
     /**
@@ -94,8 +94,8 @@ abstract class AbstractBaseBeanList implements BeanListInterface
 
 
     /**
-     * @param string          $msg
-     * @param int             $code
+     * @param string $msg
+     * @param int $code
      * @param Exception|null $previous
      *
      * @return $this                                if $this->throwErrors is FALSE
@@ -337,7 +337,7 @@ abstract class AbstractBaseBeanList implements BeanListInterface
 
 
     /**
-     * @param int           $offset
+     * @param int $offset
      * @param BeanInterface $value
      *
      * @return $this
@@ -396,13 +396,13 @@ abstract class AbstractBaseBeanList implements BeanListInterface
 
 
     /**
-     * Same behaviour like @param int  $offset
+     * Same behaviour like @param int $offset
      * @param null $length
-     * @param int  $stepWidth
+     * @param int $stepWidth
      *
      * @return AbstractBaseBeanList
      * @throws BeanListException
-     *@see http://php.net/manual/en/function.array-slice.php
+     * @see http://php.net/manual/en/function.array-slice.php
      *
      * @see array_slice
      */
@@ -415,11 +415,11 @@ abstract class AbstractBaseBeanList implements BeanListInterface
 
 
     /**
-     * @example bean/abstract-bean-list/each.php 2
-     *
      * @param callable $callback
      *
      * @return $this
+     * @example bean/abstract-bean-list/each.php 2
+     *
      */
     public function each(callable $callback)
     {
@@ -431,13 +431,13 @@ abstract class AbstractBaseBeanList implements BeanListInterface
 
 
     /**
+     * @param callable $callback
+     *
+     * @return bool
      * @example bean/abstract-bean-list/every.php 2
      *
      * Tests whether all beans pass the test implemented by the provided function.
      *
-     * @param callable $callback
-     *
-     * @return bool
      */
     public function every(callable $callback)
     {
@@ -464,11 +464,11 @@ abstract class AbstractBaseBeanList implements BeanListInterface
 
     /**
      * @param callable $callback
-     * @param bool     $returnBeanList if TRUE a new bean list with the found beans or NULL will be returned
+     * @param bool $returnBeanList if TRUE a new bean list with the found beans or NULL will be returned
      *
      * @return bool|AbstractBaseBeanList
      * @throws BeanListException
-     *@example bean/abstract-bean-list/some.php 2
+     * @example bean/abstract-bean-list/some.php 2
      *
      * tests whether some beans passes the test implemented by the provided function
      *
@@ -508,7 +508,7 @@ abstract class AbstractBaseBeanList implements BeanListInterface
      *
      * @return AbstractBaseBeanList
      * @throws BeanListException
-     *@see \Niceshops\Library\Core\Bean\BeanList\AbstractBeanList::some
+     * @see \Niceshops\Library\Core\Bean\BeanList\AbstractBeanList::some
      *
      */
     public function filter(callable $callback)
@@ -518,14 +518,14 @@ abstract class AbstractBaseBeanList implements BeanListInterface
 
 
     /**
+     * @param callable $callback
+     * @param bool $returnBean if TRUE the found bean or NULL will be returned
+     *
+     * @return bool|BeanInterface
      * @example bean/abstract-bean-list/exclusive.php 2
      *
      * tests only one bean passes the test implemented by the provided function (XOR)
      *
-     * @param callable $callback
-     * @param bool     $returnBean if TRUE the found bean or NULL will be returned
-     *
-     * @return bool|BeanInterface
      */
     public function exclusive(callable $callback, $returnBean = false)
     {
@@ -552,6 +552,9 @@ abstract class AbstractBaseBeanList implements BeanListInterface
 
 
     /**
+     * @param callable $callback
+     *
+     * @return array
      * @example bean/abstract-bean-list/map.php 2
      *
      * creates a new array with the results of calling a provided function on every bean
@@ -559,9 +562,6 @@ abstract class AbstractBaseBeanList implements BeanListInterface
      * TODO: add second paramter "returnBeanList = false". If TRUE, each callback has to return an array or bean and a bean list will be returned instead of an
      * array
      *
-     * @param callable $callback
-     *
-     * @return array
      */
     public function map(callable $callback)
     {
@@ -643,13 +643,13 @@ abstract class AbstractBaseBeanList implements BeanListInterface
 
 
     /**
-     * Same behaviour like @see usort.
+     * Same behaviour like @param callable $callback
+     *
+     * @return $this
+     * @see usort.
      *
      * @see http://php.net/manual/en/function.usort.php
      *
-     * @param callable $callback
-     *
-     * @return $this
      */
     public function sort(callable $callback)
     {
@@ -660,6 +660,14 @@ abstract class AbstractBaseBeanList implements BeanListInterface
 
 
     /**
+     * @param string $key1 a bean data key (NOTE: key has to be defined at any bean inside the bean list)
+     * @param int $order1 SORT_ASC, SORT_DESC
+     * @param int $flags1 SORT_REGULAR, SORT_NUMERIC, SORT_STRING, SORT_LOCALE_STRING, SORT_NATURAL, SORT_FLAG_CASE
+     *
+     * @return bool
+     * @throws BeanListException   if $this->throwErrors = TRUE and invalid arguments passed
+     * @see     http://php.net/manual/en/function.array-multisort.php
+     *
      * @example bean/abstract-bean-list/sort-by-data.php 2
      *
      * Sorts the bean list by defined data keys,
@@ -672,14 +680,6 @@ abstract class AbstractBaseBeanList implements BeanListInterface
      *  $this->sortByData("count", SORT_DESC, SORT_NUMERIC, "title", SORT_STRING);
      *
      * @see     array_multisort()
-     * @see     http://php.net/manual/en/function.array-multisort.php
-     *
-     * @param string $key1   a bean data key (NOTE: key has to be defined at any bean inside the bean list)
-     * @param int    $order1 SORT_ASC, SORT_DESC
-     * @param int    $flags1 SORT_REGULAR, SORT_NUMERIC, SORT_STRING, SORT_LOCALE_STRING, SORT_NATURAL, SORT_FLAG_CASE
-     *
-     * @return bool
-     * @throws BeanListException   if $this->throwErrors = TRUE and invalid arguments passed
      */
     public function sortByData($key1, $order1 = SORT_ASC, $flags1 = SORT_REGULAR)
     {
@@ -723,8 +723,8 @@ abstract class AbstractBaseBeanList implements BeanListInterface
     /**
      * Sort bean list ascending by the defined bean data key.
      *
-     * @param string $key   a bean data key (NOTE: key has to be defined at any bean inside the bean list)
-     * @param int    $flags SORT_REGULAR, SORT_NUMERIC, SORT_STRING, SORT_LOCALE_STRING, SORT_NATURAL, SORT_FLAG_CASE
+     * @param string $key a bean data key (NOTE: key has to be defined at any bean inside the bean list)
+     * @param int $flags SORT_REGULAR, SORT_NUMERIC, SORT_STRING, SORT_LOCALE_STRING, SORT_NATURAL, SORT_FLAG_CASE
      *
      * @return bool
      * @throws BeanListException
@@ -738,8 +738,8 @@ abstract class AbstractBaseBeanList implements BeanListInterface
     /**
      * Sort bean list descending by the defined bean data key.
      *
-     * @param string $key   a bean data key (NOTE: key has to be defined at any bean inside the bean list)
-     * @param int    $flags SORT_REGULAR, SORT_NUMERIC, SORT_STRING, SORT_LOCALE_STRING, SORT_NATURAL, SORT_FLAG_CASE
+     * @param string $key a bean data key (NOTE: key has to be defined at any bean inside the bean list)
+     * @param int $flags SORT_REGULAR, SORT_NUMERIC, SORT_STRING, SORT_LOCALE_STRING, SORT_NATURAL, SORT_FLAG_CASE
      *
      * @return bool
      * @throws BeanListException
@@ -750,11 +750,9 @@ abstract class AbstractBaseBeanList implements BeanListInterface
     }
 
 
-
-
     /**
      * @param string $name
-     * @param mixed  $value
+     * @param mixed $value
      *
      * @return mixed
      */
@@ -848,7 +846,7 @@ abstract class AbstractBaseBeanList implements BeanListInterface
 
 
     /**
-     * @param array      $arrData
+     * @param array $arrData
      * @param array|null $arrNames
      * @param array|null $arrDataTypes
      *

@@ -1,5 +1,7 @@
 <?php
-namespace Niceshops\Library\Core\Bean\DatabaseBean;
+declare(strict_types=1);
+
+namespace NiceshopsDev\Bean\Database;
 
 /**
  * Trait PrimaryKeyTrait
@@ -11,7 +13,7 @@ trait PrimaryKeyTrait
      * @var array
      */
     private $arrDatabasePrimaryKeys = [];
-    
+
     /**
      * @return array
      */
@@ -19,7 +21,7 @@ trait PrimaryKeyTrait
     {
         return $this->arrDatabasePrimaryKeys;
     }
-    
+
     /**
      * @param string $key
      * @param string $dbColumnName
@@ -28,7 +30,7 @@ trait PrimaryKeyTrait
     {
         $this->arrDatabasePrimaryKeys[$key] = $dbColumnName;
     }
-    
+
     /**
      * @param string $key
      *
@@ -38,7 +40,7 @@ trait PrimaryKeyTrait
     {
         return $this->arrDatabasePrimaryKeys[$key];
     }
-    
+
     /**
      * @param string $key
      *
@@ -48,5 +50,5 @@ trait PrimaryKeyTrait
     {
         return isset($this->arrDatabasePrimaryKeys[$key]);
     }
-    
+
 }

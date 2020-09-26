@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace NiceshopsDev\Bean\JsonSerializable;
 
 
+use Exception;
 use NiceshopsDev\Bean\BeanException;
 use NiceshopsDev\Bean\BeanInterface;
 
@@ -47,11 +48,7 @@ trait JsonSerializableBeanTrait
     public function toJson($dataOnly = false): string
     {
         if ($dataOnly) {
-            if (method_exists($this, "toArrayRecursive")) {
-                $arrData = $this->toArrayRecursive();
-            } else {
-                $arrData = $this->toArray();
-            }
+            $arrData = $this->toArray();
         } else {
             $arrData = $this->jsonSerialize();
         }
@@ -62,7 +59,7 @@ trait JsonSerializableBeanTrait
 
     /**
      * @param string $json
-     * @param bool   $dataOnly
+     * @param bool $dataOnly
      *
      * @return $this
      * @throws BeanException
@@ -102,7 +99,7 @@ trait JsonSerializableBeanTrait
     {
         try {
             $data = json_decode($json);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw new BeanException($e->getMessage(), $e->getCode(), $e->getPrevious());
         }
 

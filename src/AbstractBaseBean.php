@@ -263,7 +263,7 @@ abstract class AbstractBaseBean implements BeanInterface
      * NOTE: existing data will be overwritten (to merge data use "mergeWithData")
      * NOTE: there will be no data reset applied before setting the passed data (a data reset has to be done explicitly with "resetData")
      *
-     * @param array      $arrData [ "<NAME>" => <VALUE>, ... ]
+     * @param array $arrData [ "<NAME>" => <VALUE>, ... ]
      * @param array|null $arrName [ "<NAME>", ... ]     <NAME> can also reference to nested data at the passed data with dot-notation syntax (e.g. "foo.bar.baz")
      *
      * @return $this|mixed
@@ -387,7 +387,7 @@ abstract class AbstractBaseBean implements BeanInterface
 
 
     /**
-     * @param string   $name
+     * @param string $name
      * @param callable $callable
      *
      * @return $this
@@ -413,9 +413,9 @@ abstract class AbstractBaseBean implements BeanInterface
 
 
     /**
-     * @param string        $name
-     * @param string        $dataType
-     * @param bool          $nullable
+     * @param string $name
+     * @param string $dataType
+     * @param bool $nullable
      * @param callable|null $callable only valid and considered for self::DATA_TYPE_CALLABLE datatype
      *
      * @return $this
@@ -487,7 +487,7 @@ abstract class AbstractBaseBean implements BeanInterface
      *
      * @return array|null   [ "name" => "<DATA_TYPE>", "callback" => <CALLABLE>? ]
      */
-    protected function getDataTypeData(string $name) : ?array
+    protected function getDataTypeData(string $name): ?array
     {
         try {
             $key = $this->normalizeDataName($name);
@@ -504,7 +504,7 @@ abstract class AbstractBaseBean implements BeanInterface
 
 
     /**
-     * @param string $name  data name
+     * @param string $name data name
      *
      * @return null|string
      */
@@ -532,7 +532,7 @@ abstract class AbstractBaseBean implements BeanInterface
 
 
     /**
-     * @param string $name  data name
+     * @param string $name data name
      *
      * @return callable|null
      */
@@ -635,7 +635,7 @@ abstract class AbstractBaseBean implements BeanInterface
 
 
     /**
-     * @param mixed  $value
+     * @param mixed $value
      * @param string $name
      *
      * @return mixed
@@ -770,7 +770,7 @@ abstract class AbstractBaseBean implements BeanInterface
     {
         if (is_object($value) && method_exists($value, "toArray")) {
             $value = $value->toArray();
-        } elseif(is_string($value)) {
+        } elseif (is_string($value)) {
             $trimmedValue = trim($value);
             if (substr($trimmedValue, 0, 1) === "{" && substr($trimmedValue, -1) === "}") {
                 $value = json_decode($trimmedValue);
@@ -1005,7 +1005,7 @@ abstract class AbstractBaseBean implements BeanInterface
 
     /**
      * @param string $normalizedDataNamePrefix
-     * @param bool   $ignoreSelf
+     * @param bool $ignoreSelf
      *
      * @return array
      */
@@ -1368,7 +1368,7 @@ abstract class AbstractBaseBean implements BeanInterface
     /**
      * @param string $name
      * @param string $dataType
-     * @param bool   $overwrite
+     * @param bool $overwrite
      *
      * @return $this
      * @throws BeanException

@@ -1,5 +1,7 @@
 <?php
-namespace Niceshops\Library\Core\Bean\DatabaseBean;
+declare(strict_types=1);
+
+namespace NiceshopsDev\Bean\Database;
 
 /**
  * Trait ForeignKeyTrait
@@ -11,7 +13,7 @@ trait ForeignKeyTrait
      * @var array
      */
     private $arrDatabaseForeignKeys = [];
-    
+
     /**
      * @return array
      */
@@ -19,7 +21,7 @@ trait ForeignKeyTrait
     {
         return $this->arrDatabaseForeignKeys;
     }
-    
+
     /**
      * @param string $key
      * @param string $dbColumnName
@@ -28,7 +30,7 @@ trait ForeignKeyTrait
     {
         $this->arrDatabaseForeignKeys[$key] = $dbColumnName;
     }
-    
+
     /**
      * @param string $key
      *
@@ -38,7 +40,7 @@ trait ForeignKeyTrait
     {
         return $this->arrDatabaseForeignKeys[$key];
     }
-    
+
     /**
      * @param string $key
      *
@@ -48,5 +50,5 @@ trait ForeignKeyTrait
     {
         return isset($this->arrDatabaseForeignKeys[$key]);
     }
-    
+
 }
