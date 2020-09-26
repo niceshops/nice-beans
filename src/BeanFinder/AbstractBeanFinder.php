@@ -106,6 +106,7 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     public function find(): int
     {
         $this->checkExecutionAllowed();
+        $this->beanList = $this->getFactory()->createBeanList();
         $foundRows = $this->getLoader()->find();
         while ($this->getLoader()->fetch()) {
             $this->getBeanList()->push($this->initializeBeanWithData($this->getFactory()->createBean(), $this->getLoader()->getRow()));
