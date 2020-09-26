@@ -15,15 +15,15 @@ interface SerializeableBeanInterface extends Serializable
     /**
      *
      */
-    protected const SERIALIZE_DATA_KEY = "data";
+    public const SERIALIZE_DATA_KEY = "data";
     /**
      *
      */
-    protected const SERIALIZE_DATA_TYPE_KEY = "arrDataType";
+    public const SERIALIZE_DATA_TYPE_KEY = "arrDataType";
     /**
      *
      */
-    protected const SELF_REFERENCE_PLACEHOLDER = "__THIS__";
+    public const SELF_REFERENCE_PLACEHOLDER = "__THIS__";
 
     /**
      * @param array $data
