@@ -17,6 +17,16 @@ trait DatabaseBeanTrait
     use UniqueKeyTrait;
     use MappedFieldTrait;
 
+    /**
+     * @param $key
+     * @throws \NiceshopsDev\Bean\BeanException
+     */
+    public function setPrimaryKey($key)
+    {
+        foreach ($this->getPrimaryKeys() as $name) {
+            $this->setData($name, $key);
+        }
+    }
 
     /**
      * @param array $arrayData

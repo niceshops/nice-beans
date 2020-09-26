@@ -48,4 +48,8 @@ interface DatabaseBeanInterface
      * @return array
      */
     public function getForeignKeys(): array;
+
+
+    public function setPrimaryKey($key);
+
 }
