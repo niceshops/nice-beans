@@ -71,7 +71,7 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
      */
     public function getBeanList(): BeanListInterface
     {
-        if (null !== $this->beanList) {
+        if (null === $this->beanList) {
             throw new BeanException('BeanList not initialized, run find() first.');
         }
         return $this->beanList;
