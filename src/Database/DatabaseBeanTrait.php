@@ -47,7 +47,7 @@ trait DatabaseBeanTrait
     {
         foreach ($this->getDatabaseFields() as $name => $dbColumnName) {
             if (isset($arrayData[$dbColumnName])) {
-                $this->setData($this->getOriginalDataName($name), $this->convertValueFromDatabase($arrayData[$dbColumnName], $this->getDataType($name)));
+                $this->setData($this->getOriginalDataName($name), $arrayData[$dbColumnName]);
             }
         }
     }
@@ -62,7 +62,7 @@ trait DatabaseBeanTrait
         $arrDatabaseData = [];
         foreach ($this->getDatabaseFields() as $name => $dbColumnName) {
             if ($this->hasData($name)) {
-                $arrDatabaseData[$dbColumnName] = $this->convertValueToDatabase($this->getData($name), $this->getDataType($name));
+                $arrDatabaseData[$dbColumnName] = $this->getData($name);
             }
         }
         return $arrDatabaseData;
@@ -77,7 +77,7 @@ trait DatabaseBeanTrait
         $arrDatabaseData = [];
         foreach (array_merge($this->getDatabasePrimaryKeys()) as $name => $dbColumnName) {
             if ($this->hasData($name)) {
-                $arrDatabaseData[$dbColumnName] = $this->convertValueToDatabase($this->getData($name), $this->getDataType($name));
+                $arrDatabaseData[$dbColumnName] = $this->getData($name);
             }
         }
         return $arrDatabaseData;
@@ -92,7 +92,7 @@ trait DatabaseBeanTrait
         $arrDatabaseData = [];
         foreach (array_merge($this->getDatabaseUniqueKeys()) as $name => $dbColumnName) {
             if ($this->hasData($name)) {
-                $arrDatabaseData[$dbColumnName] = $this->convertValueToDatabase($this->getData($name), $this->getDataType($name));
+                $arrDatabaseData[$dbColumnName] = $this->getData($name);
             }
         }
         return $arrDatabaseData;
@@ -107,7 +107,7 @@ trait DatabaseBeanTrait
         $arrDatabaseData = [];
         foreach (array_merge($this->getDatabaseForeignKeys()) as $name => $dbColumnName) {
             if ($this->hasData($name)) {
-                $arrDatabaseData[$dbColumnName] = $this->convertValueToDatabase($this->getData($name), $this->getDataType($name));
+                $arrDatabaseData[$dbColumnName] = $this->getData($name);
             }
         }
         return $arrDatabaseData;
