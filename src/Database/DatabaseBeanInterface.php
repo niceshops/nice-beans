@@ -60,4 +60,9 @@ interface DatabaseBeanInterface
      */
     public function hasPrimaryKeyValue(): bool;
 
+    /**
+     * @return array
+     */
+    public function getDatabaseFields(): array;
+
 }
