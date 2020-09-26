@@ -92,15 +92,6 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     }
 
     /**
-     * @param BeanInterface $bean
-     * @param array $arrData
-     *
-     * @return BeanInterface
-     */
-    abstract public function initializeBeanWithData(BeanInterface $bean, array $arrData): BeanInterface;
-
-
-    /**
      * @throws BeanException
      */
     public function find(): int
@@ -109,7 +100,7 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
         $this->beanList = $this->getFactory()->createBeanList();
         $foundRows = $this->getLoader()->find();
         while ($this->getLoader()->fetch()) {
-            $this->getBeanList()->push($this->initializeBeanWithData($this->getFactory()->createBean(), $this->getLoader()->getRow()));
+            $this->getBeanList()->push($this->getLoader()->initializeBeanWithData($this->getFactory()->createBean()));
         }
         return $foundRows;
     }

@@ -508,7 +508,7 @@ abstract class AbstractBaseBean implements BeanInterface
      *
      * @return null|string
      */
-    protected function getDataType(string $name): ?string
+    public function getDataType(string $name): ?string
     {
         $data = $this->getDataTypeData($name);
         if (isset($data["name"]) && is_string($data["name"])) {

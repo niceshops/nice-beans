@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace NiceshopsDev\Bean\BeanFinder;
 
+use NiceshopsDev\Bean\BeanInterface;
 use NiceshopsDev\NiceCore\Attribute\AttributeAwareInterface;
 use NiceshopsDev\NiceCore\Option\OptionAwareInterface;
 
@@ -33,5 +34,11 @@ interface BeanLoaderInterface extends OptionAwareInterface, AttributeAwareInterf
      * @return array
      */
     public function getRow(): array;
+
+    /**
+     * @param BeanInterface $bean
+     * @return BeanInterface
+     */
+    public function initializeBeanWithData(BeanInterface $bean): BeanInterface;
 
 }

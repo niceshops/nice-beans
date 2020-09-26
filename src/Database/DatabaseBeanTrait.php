@@ -225,19 +225,4 @@ trait DatabaseBeanTrait
         }
         return $this;
     }
-
-
-    /**
-     * @param $value
-     * @param string $type
-     * @return mixed
-     */
-    abstract protected function convertValueToDatabase($value, string $type);
-
-    /**
-     * @param $value
-     * @param string $type
-     * @return mixed
-     */
-    abstract protected function convertValueFromDatabase($value, string $type);
 }
