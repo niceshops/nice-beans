@@ -78,16 +78,13 @@ abstract class AbstractBeanProcessor implements BeanProcessorInterface
      */
     protected function isBeanAllowedToProcess(BeanInterface $bean): bool
     {
-        $isSaveAllowed = false;
-        if ($this->hasOption(self::OPTION_SAVE_NON_EMPTY_ONLY) && $bean instanceof Countable) {
-            $isSaveAllowed = $isSaveAllowed && $bean->count() > 0;
+        if ($this->hasOption(self::OPTION_SAVE_NON_EMPTY_ONLY) && $bean instanceof Countable &&  $bean->count() == 0) {
+            return false;
         }
-        if (!$this->hasOption(self::OPTION_IGNORE_VALIDATION)) {
-            $isSaveAllowed = $isSaveAllowed && $this->validate($bean);
-        } else {
-            $isSaveAllowed = true;
+        if ($this->hasOption(self::OPTION_IGNORE_VALIDATION)) {
+            return true;
         }
-        return $isSaveAllowed;
+        return $this->validate($bean);
     }
 
     /**
