@@ -19,4 +19,10 @@ interface BeanSaverInterface extends BeanListAwareInterface, OptionAwareInterfac
      */
     public function save(): int;
 
+    /**
+     * @return int
+     */
+    public function delete(): int;
+
+
 }

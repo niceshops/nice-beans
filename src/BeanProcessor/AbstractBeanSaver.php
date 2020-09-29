@@ -40,6 +40,24 @@ abstract class AbstractBeanSaver implements BeanSaverInterface
     }
 
     /**
+     * @return int number of successfully saved beans
+     * @throws BeanException
+     */
+    public function delete(): int
+    {
+        if (!$this->hasBeanList()) {
+            throw new BeanException('No bean list set in bean saver.');
+        }
+        $affectdRows = 0;
+        try {
+            $affectdRows = $this->deleteBeanList($this->getBeanList());
+        } catch (Throwable $error) {
+            $this->onError($error);
+        }
+        return $affectdRows;
+    }
+
+    /**
      * @param BeanListInterface $beanList
      *
      * @return int number of successfully saved beans
@@ -55,6 +73,21 @@ abstract class AbstractBeanSaver implements BeanSaverInterface
         return $affectdRows;
     }
 
+    /**
+     * @param BeanListInterface $beanList
+     *
+     * @return int number of successfully saved beans
+     */
+    protected function deleteBeanList(BeanListInterface $beanList): int
+    {
+        $affectdRows = 0;
+        foreach ($beanList as $bean) {
+            if ($this->deleteBean($bean)) {
+                $affectdRows++;
+            }
+        }
+        return $affectdRows;
+    }
 
     /**
      * @param BeanInterface $bean
@@ -62,6 +95,13 @@ abstract class AbstractBeanSaver implements BeanSaverInterface
      * @return bool true on success
      */
     abstract protected function saveBean(BeanInterface $bean): bool;
+
+    /**
+     * @param BeanInterface $bean
+     *
+     * @return bool true on success
+     */
+    abstract protected function deleteBean(BeanInterface $bean): bool;
 
     /**
      * @param Throwable $error

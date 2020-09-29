@@ -53,12 +53,21 @@ abstract class AbstractBeanProcessor implements BeanProcessorInterface
     /**
      * Returns the processed bean list.
      */
-    public function process(): int
+    public function save(): int
     {
         $this->getSaver()->setBeanList($this->getBeanListForProcess());
         return $this->getSaver()->save();
     }
 
+
+    /**
+     * Returns the processed bean list.
+     */
+    public function delete(): int
+    {
+        $this->getSaver()->setBeanList($this->getBeanListForProcess());
+        return $this->getSaver()->delete();
+    }
     /**
      * Returns a filtered copy of the source bean list.
      * All saving operations are applied on this filtered copy.
