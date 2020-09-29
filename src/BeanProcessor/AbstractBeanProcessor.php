@@ -55,7 +55,7 @@ abstract class AbstractBeanProcessor implements BeanProcessorInterface
      */
     public function save(): int
     {
-        $this->getSaver()->setBeanList($this->getBeanListForProcess());
+        $this->getSaver()->setBeanList($this->getBeanListForSave());
         return $this->getSaver()->save();
     }
 
@@ -65,18 +65,19 @@ abstract class AbstractBeanProcessor implements BeanProcessorInterface
      */
     public function delete(): int
     {
-        $this->getSaver()->setBeanList($this->getBeanListForProcess());
+        $this->getSaver()->setBeanList($this->getBeanListForDelete());
         return $this->getSaver()->delete();
     }
+
     /**
      * Returns a filtered copy of the source bean list.
      * All saving operations are applied on this filtered copy.
      *
      */
-    protected function getBeanListForProcess(): BeanListInterface
+    protected function getBeanListForSave(): BeanListInterface
     {
         return (clone $this->getBeanList())->filter(function (BeanInterface $bean) {
-            return $this->isBeanAllowedToProcess($bean);
+            return $this->isBeanAllowedToSave($bean);
         });
     }
 
@@ -85,7 +86,7 @@ abstract class AbstractBeanProcessor implements BeanProcessorInterface
      *
      * @return bool
      */
-    protected function isBeanAllowedToProcess(BeanInterface $bean): bool
+    protected function isBeanAllowedToSave(BeanInterface $bean): bool
     {
         if ($this->hasOption(self::OPTION_SAVE_NON_EMPTY_ONLY) && $bean instanceof Countable &&  $bean->count() == 0) {
             return false;
@@ -93,11 +94,44 @@ abstract class AbstractBeanProcessor implements BeanProcessorInterface
         if ($this->hasOption(self::OPTION_IGNORE_VALIDATION)) {
             return true;
         }
-        return $this->validate($bean);
+        return $this->validateForSave($bean);
     }
 
     /**
+     * @param BeanInterface $bean
      * @return bool
      */
-    abstract protected function validate(BeanInterface $bean): bool;
+    abstract protected function validateForSave(BeanInterface $bean): bool;
+
+
+    /**
+     * Returns a filtered copy of the source bean list.
+     * All saving operations are applied on this filtered copy.
+     *
+     */
+    protected function getBeanListForDelete(): BeanListInterface
+    {
+        return (clone $this->getBeanList())->filter(function (BeanInterface $bean) {
+            return $this->isBeanAllowedToDelete($bean);
+        });
+    }
+
+    /**
+     * @param BeanInterface $bean
+     *
+     * @return bool
+     */
+    protected function isBeanAllowedToDelete(BeanInterface $bean): bool
+    {
+        if ($this->hasOption(self::OPTION_IGNORE_VALIDATION)) {
+            return true;
+        }
+        return $this->validateForDelete($bean);
+    }
+
+    /**
+     * @param BeanInterface $bean
+     * @return bool
+     */
+    abstract protected function validateForDelete(BeanInterface $bean): bool;
 }
