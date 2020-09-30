@@ -110,7 +110,7 @@ abstract class AbstractBeanSaver implements BeanSaverInterface
      */
     protected function onError(Throwable $error)
     {
-        throw new BeanException($error->getMessage(), $error->getCode(), $error);
+        throw new BeanException($error->getMessage());
     }
 
 }
