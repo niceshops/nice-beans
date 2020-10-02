@@ -100,9 +100,16 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
         $this->beanList = $this->getFactory()->createBeanList();
         $foundRows = $this->getLoader()->find();
         while ($this->getLoader()->fetch()) {
-            $this->getBeanList()->push($this->getLoader()->initializeBeanWithData($this->getFactory()->createBean()));
+            $this->getBeanList()->push(
+                $this->initializeBeanWithAdditionlData($this->getLoader()->initializeBeanWithData($this->getFactory()->createBean()))
+            );
         }
         return $foundRows;
+    }
+
+    protected function initializeBeanWithAdditionlData(BeanInterface $bean): BeanInterface
+    {
+        return $bean;
     }
 
     /**
