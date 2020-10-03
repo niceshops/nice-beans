@@ -86,7 +86,7 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
         $beanList = $this->getBeanList();
         $count = $beanList->count();
         if ($count !== 1) {
-            throw new BeanException('Could not get single bean, beanlsit containes ' . $count . ' beans.');
+            throw new BeanException('Could not get single bean, bean list containes ' . $count . ' beans.');
         }
         return $beanList->offsetGet(0);
     }
