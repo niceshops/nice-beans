@@ -21,5 +21,8 @@ interface BeanProcessorInterface extends BeanListAwareInterface, OptionAwareInte
 
     public function delete(): int;
 
+    public function getSaver(): BeanSaverInterface;
+
+
 
 }

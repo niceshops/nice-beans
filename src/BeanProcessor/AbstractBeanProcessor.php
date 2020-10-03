@@ -45,7 +45,7 @@ abstract class AbstractBeanProcessor implements BeanProcessorInterface
     /**
      * @return BeanSaverInterface
      */
-    protected function getSaver(): BeanSaverInterface
+    public function getSaver(): BeanSaverInterface
     {
         return $this->saver;
     }
