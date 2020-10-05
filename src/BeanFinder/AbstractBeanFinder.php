@@ -38,6 +38,16 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     private $factory;
 
     /**
+     * @var int
+     */
+    private $limit;
+
+    /**
+     * @var int
+     */
+    private $offset;
+
+    /**
      * AbstractBeanFinderFactory constructor.
      *
      * @param BeanLoaderInterface $loader
@@ -98,6 +108,7 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     {
         $this->checkExecutionAllowed();
         $this->beanList = $this->getFactory()->createBeanList();
+        $this->getLoader()->limit($this->limit, $this->offset);
         $foundRows = $this->getLoader()->find();
         while ($this->getLoader()->fetch()) {
             $this->getBeanList()->push(
@@ -119,6 +130,17 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     {
         return $this->getLoader()->count();
     }
+
+    /**
+     * @param int $limit
+     * @param int $offset
+     */
+    public function limit(int $limit, int $offset): void
+    {
+        $this->limit = $limit;
+        $this->offset = $offset;
+    }
+
 
     /**
      * @throws BeanException

@@ -20,6 +20,13 @@ interface BeanLoaderInterface extends OptionAwareInterface, AttributeAwareInterf
     public function count(): int;
 
     /**
+     * @param int $limit
+     * @param int $offset
+     * @return mixed
+     */
+    public function limit(int $limit, int $offset);
+
+    /**
      *
      * @return int
      */

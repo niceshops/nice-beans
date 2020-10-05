@@ -25,6 +25,12 @@ interface BeanFinderInterface extends OptionAwareInterface, AttributeAwareInterf
      */
     public function count(): int;
 
+    /**
+     * @param int $limit
+     * @param int $offset
+     */
+    public function limit(int $limit, int $offset): void;
+
 
     /**
      * @return BeanListInterface
