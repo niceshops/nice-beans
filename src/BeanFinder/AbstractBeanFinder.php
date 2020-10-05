@@ -108,7 +108,9 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     {
         $this->checkExecutionAllowed();
         $this->beanList = $this->getFactory()->createBeanList();
-        $this->getLoader()->limit($this->limit, $this->offset);
+        if ($this->hasLimit() && $this->hasOffset()) {
+            $this->getLoader()->limit($this->getLimit(), $this->getOffset());
+        }
         $foundRows = $this->getLoader()->find();
         while ($this->getLoader()->fetch()) {
             $this->getBeanList()->push(
@@ -140,6 +142,61 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
         $this->limit = $limit;
         $this->offset = $offset;
     }
+
+    /**
+    * @return int
+    */
+    public function getLimit(): int
+    {
+        return $this->limit;
+    }
+
+    /**
+    * @param int $limit
+    *
+    * @return $this
+    */
+    public function setLimit(int $limit): self
+    {
+        $this->limit = $limit;
+        return $this;
+    }
+
+    /**
+    * @return bool
+    */
+    public function hasLimit(): bool
+    {
+        return $this->limit !== null;
+    }
+
+    /**
+    * @return int
+    */
+    public function getOffset(): int
+    {
+        return $this->offset;
+    }
+
+    /**
+    * @param int $offset
+    *
+    * @return $this
+    */
+    public function setOffset(int $offset): self
+    {
+        $this->offset = $offset;
+        return $this;
+    }
+
+    /**
+    * @return bool
+    */
+    public function hasOffset(): bool
+    {
+        return $this->offset !== null;
+    }
+
 
 
     /**
