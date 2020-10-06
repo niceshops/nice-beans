@@ -50,7 +50,7 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     /**
      * @var BeanFinderLink[]
      */
-    private $beanFinderLink_List;
+    private $beanFinderLink_List = [];
 
     /**
      * AbstractBeanFinderFactory constructor.
