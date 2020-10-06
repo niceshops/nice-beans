@@ -17,47 +17,47 @@ interface BeanListInterface extends BeanInterface
 {
     /**
      * @param BeanInterface $bean
-     * @return mixed
+     * @return $this
      */
     public function addBean(BeanInterface $bean);
 
     /**
      * @param $beans
-     * @return mixed
+     * @return $this
      */
     public function addBeans($beans);
 
     /**
      * @param BeanInterface $bean
-     * @return mixed
+     * @return $this
      */
     public function removeBean(BeanInterface $bean);
 
     /**
      * @param BeanInterface $bean
-     * @return mixed
+     * @return bool
      */
     public function hasBean(BeanInterface $bean);
 
     /**
      * @param BeanInterface $bean
-     * @return mixed
+     * @return int
      */
     public function indexOfBean(BeanInterface $bean);
 
     /**
-     * @return mixed
+     * @return BeanInterface[]
      */
-    public function getBeans();
+    public function getBeans(): array;
 
     /**
      * @param $beans
-     * @return mixed
+     * @return $this
      */
     public function setBeans($beans);
 
     /**
-     * @return mixed
+     * @return $this
      */
     public function resetBeans();
 
@@ -65,19 +65,19 @@ interface BeanListInterface extends BeanInterface
      * @param int $offset
      * @param null $length
      * @param int $stepWidth
-     * @return mixed
+     * @return $this
      */
     public function slice($offset = 0, $length = null, $stepWidth = 1);
 
     /**
      * @param callable $callback
-     * @return mixed
+     * @return $this
      */
     public function each(callable $callback);
 
     /**
      * @param callable $callback
-     * @return mixed
+     * @return $this
      */
     public function every(callable $callback);
 
@@ -89,26 +89,26 @@ interface BeanListInterface extends BeanInterface
     /**
      * @param callable $callback
      * @param bool $returnBeanList
-     * @return mixed
+     * @return $this
      */
     public function some(callable $callback, $returnBeanList = false);
 
     /**
      * @param callable $callback
-     * @return mixed
+     * @return $this
      */
     public function filter(callable $callback);
 
     /**
      * @param callable $callback
      * @param bool $returnBean
-     * @return mixed
+     * @return BeanInterface
      */
     public function exclusive(callable $callback, $returnBean = false);
 
     /**
      * @param callable $callback
-     * @return mixed
+     * @return array
      */
     public function map(callable $callback);
 

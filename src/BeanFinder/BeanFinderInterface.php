@@ -28,8 +28,16 @@ interface BeanFinderInterface extends OptionAwareInterface, AttributeAwareInterf
     /**
      * @param int $limit
      * @param int $offset
+     * @return $this
      */
-    public function limit(int $limit, int $offset): void;
+    public function limit(int $limit, int $offset);
+
+    /**
+     * @param string $field
+     * @param array $list
+     * @return $this
+     */
+    public function initByValueList(string $field, array $list);
 
 
     /**
@@ -52,5 +60,25 @@ interface BeanFinderInterface extends OptionAwareInterface, AttributeAwareInterf
      * @return BeanFactoryInterface
      */
     public function getFactory(): BeanFactoryInterface;
+
+    /**
+     * @return int
+     */
+    public function getLimit(): int;
+
+    /**
+     * @return bool
+     */
+    public function hasLimit(): bool;
+
+    /**
+     * @return int
+     */
+    public function getOffset(): int;
+
+    /**
+     * @return bool
+     */
+    public function hasOffset(): bool;
 
 }

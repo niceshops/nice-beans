@@ -22,7 +22,7 @@ interface BeanLoaderInterface extends OptionAwareInterface, AttributeAwareInterf
     /**
      * @param int $limit
      * @param int $offset
-     * @return mixed
+     * @return $this
      */
     public function limit(int $limit, int $offset);
 
@@ -41,6 +41,13 @@ interface BeanLoaderInterface extends OptionAwareInterface, AttributeAwareInterf
      * @return array
      */
     public function getRow(): array;
+
+    /**
+     * @param string $field
+     * @param array $valueList
+     * @return $this
+     */
+    public function initByValueList(string $field, array $valueList);
 
     /**
      * @param BeanInterface $bean

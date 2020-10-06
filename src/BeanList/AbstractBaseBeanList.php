@@ -244,7 +244,7 @@ abstract class AbstractBaseBeanList implements BeanListInterface
     /**
      * @return BeanInterface[]
      */
-    public function getBeans()
+    public function getBeans(): array
     {
         return $this->arrBean;
     }

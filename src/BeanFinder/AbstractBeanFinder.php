@@ -48,6 +48,11 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     private $offset;
 
     /**
+     * @var BeanFinderLink[]
+     */
+    private $beanFinderLink_List;
+
+    /**
      * AbstractBeanFinderFactory constructor.
      *
      * @param BeanLoaderInterface $loader
@@ -57,6 +62,27 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     {
         $this->loader = $loader;
         $this->factory = $factory;
+    }
+
+    /**
+     * @param BeanFinderInterface $beanFinder
+     * @param string $field
+     * @param string $linkFieldSelf
+     * @param string $linkFieldRemote
+     * @return $this|BeanFinderInterface
+     */
+    public function linkBeanFinder(BeanFinderInterface $beanFinder, string $field, string $linkFieldSelf, string $linkFieldRemote): BeanFinderInterface
+    {
+        $this->beanFinderLink_List[] = new BeanFinderLink($beanFinder, $field, $linkFieldSelf, $linkFieldRemote);
+        return $this;
+    }
+
+    /**
+     * @return BeanFinderLink[]
+     */
+    public function getBeanFinderLinkList(): array
+    {
+        return $this->beanFinderLink_List;
     }
 
     /**
@@ -81,6 +107,7 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
      */
     public function getBeanList(): BeanListInterface
     {
+
         if (null === $this->beanList) {
             throw new BeanException('BeanList not initialized, run find() first.');
         }
@@ -107,19 +134,58 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     public function find(): int
     {
         $this->checkExecutionAllowed();
-        $this->beanList = $this->getFactory()->createBeanList();
         if ($this->hasLimit() && $this->hasOffset()) {
             $this->getLoader()->limit($this->getLimit(), $this->getOffset());
         }
         $foundRows = $this->getLoader()->find();
+        $this->beanList = $this->getFactory()->createBeanList();
         while ($this->getLoader()->fetch()) {
             $this->getBeanList()->push(
                 $this->initializeBeanWithAdditionlData($this->getLoader()->initializeBeanWithData($this->getFactory()->createBean()))
             );
         }
+        foreach ($this->getBeanFinderLinkList() as $link) {
+            $this->handleLinkedFinder($link->getBeanFinder(), $link->getField(), $link->getLinkFieldSelf(), $link->getLinkFieldRemote());
+        }
         return $foundRows;
     }
 
+    /**
+     * @param BeanFinderInterface $finder
+     * @param string $field
+     * @param string $linkFieldSelf
+     * @param string $linkFieldRemote
+     * @throws BeanException
+     */
+    protected function handleLinkedFinder(BeanFinderInterface $finder, string $field, string $linkFieldSelf, string $linkFieldRemote)
+    {
+        $idList = $this->getBeanList()->getData($linkFieldSelf);
+        $finder->initByValueList($linkFieldRemote, $idList);
+        $finder->find();
+        foreach ($this->getBeanList() as $parentBean) {
+            $parentBean->setData($field, $finder->getBeanList()->filter(
+                function (BeanInterface $childBean) use ($parentBean, $linkFieldSelf, $linkFieldRemote) {
+                    return $parentBean->getData($linkFieldSelf) == $childBean->getData($linkFieldRemote);
+                })
+            );
+        }
+    }
+
+    /**
+     * @param string $field
+     * @param array $valueList
+     * @return $this
+     */
+    public function initByValueList(string $field, array $valueList)
+    {
+        $this->getLoader()->initByValueList($field, $valueList);
+        return $this;
+    }
+
+    /**
+     * @param BeanInterface $bean
+     * @return BeanInterface
+     */
     protected function initializeBeanWithAdditionlData(BeanInterface $bean): BeanInterface
     {
         return $bean;
@@ -136,68 +202,47 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     /**
      * @param int $limit
      * @param int $offset
+     * @return $this
      */
-    public function limit(int $limit, int $offset): void
+    public function limit(int $limit, int $offset)
     {
         $this->limit = $limit;
         $this->offset = $offset;
+        return $this;
     }
 
     /**
-    * @return int
-    */
+     * @return int
+     */
     public function getLimit(): int
     {
         return $this->limit;
     }
 
     /**
-    * @param int $limit
-    *
-    * @return $this
-    */
-    public function setLimit(int $limit): self
-    {
-        $this->limit = $limit;
-        return $this;
-    }
-
-    /**
-    * @return bool
-    */
+     * @return bool
+     */
     public function hasLimit(): bool
     {
         return $this->limit !== null;
     }
 
     /**
-    * @return int
-    */
+     * @return int
+     */
     public function getOffset(): int
     {
         return $this->offset;
     }
 
-    /**
-    * @param int $offset
-    *
-    * @return $this
-    */
-    public function setOffset(int $offset): self
-    {
-        $this->offset = $offset;
-        return $this;
-    }
 
     /**
-    * @return bool
-    */
+     * @return bool
+     */
     public function hasOffset(): bool
     {
         return $this->offset !== null;
     }
-
-
 
     /**
      * @throws BeanException
@@ -205,7 +250,7 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     private function checkExecutionAllowed()
     {
         if ($this->hasOption(self::OPTION_EXECUTED)) {
-            throw new BeanException("Dataobject executed twice!");
+            throw new BeanException("Finder executed twice!");
         } else {
             $this->addOption(self::OPTION_EXECUTED);
         }
