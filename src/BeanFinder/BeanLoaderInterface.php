@@ -40,7 +40,7 @@ interface BeanLoaderInterface extends OptionAwareInterface, AttributeAwareInterf
     /**
      * @return array
      */
-    public function getRow(): array;
+    public function data(): array;
 
     /**
      * @param string $field
