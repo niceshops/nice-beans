@@ -23,11 +23,6 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     protected const OPTION_EXECUTED = 'executed';
 
     /**
-     * @var BeanListInterface
-     */
-    protected $beanList;
-
-    /**
      * @var BeanLoaderInterface
      */
     private $loader;
@@ -86,6 +81,14 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     }
 
     /**
+     * @return bool
+     */
+    public function hasBeanFinderLinkList(): bool
+    {
+        return is_array($this->beanFinderLink_List) && count($this->beanFinderLink_List) > 0;
+    }
+
+    /**
      * @return BeanLoaderInterface
      */
     public function getLoader(): BeanLoaderInterface
@@ -101,17 +104,61 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
         return $this->factory;
     }
 
+
+    /**
+     * @throws BeanException
+     */
+    public function find(): int
+    {
+        $this->checkExecutionAllowed();
+        if ($this->hasLimit() && $this->hasOffset()) {
+            $this->getLoader()->limit($this->getLimit(), $this->getOffset());
+        }
+        return $this->getLoader()->find();
+    }
+
+    /**
+     * @param string|null $filterField
+     * @param array|null $filterValueList
+     * @return BeanGenerator
+     */
+    public function getBeanGenerator(string $filterField = null, array $filterValueList = null): BeanGenerator
+    {
+        return new BeanGenerator(function () use ($filterField, $filterValueList) {
+            $this->getLoader()->rewind();
+            if ($this->hasBeanFinderLinkList()) {
+                foreach ($this->getBeanFinderLinkList() as $link) {
+                    $link->getBeanFinder()->initByValueList($link->getLinkFieldRemote(), $this->getLoader()->preloadValueList($link->getLinkFieldSelf()));
+                    $link->getBeanFinder()->find();
+                }
+            }
+            while ($this->getLoader()->fetch()) {
+                $bean = $this->initializeBeanWithAdditionlData($this->getLoader()->initializeBeanWithData($this->getFactory()->createBean()));
+                if ($this->hasBeanFinderLinkList()) {
+                    foreach ($this->getBeanFinderLinkList() as $link) {
+                        if (isset($idList[$link->getLinkFieldSelf()])) {
+                            $bean->setData($link->getField(),  $link->getBeanFinder()->getBeanGenerator($link->getLinkFieldRemote(), [$bean->getData($link->getLinkFieldSelf())]));
+                        }
+                    }
+                }
+                if (null !== $filterField && null !== $filterValueList) {
+                    if ($bean->hasData($filterField) && in_array($bean->getData($filterField), $filterValueList)) {
+                        yield $bean;
+                    }
+                } else {
+                    yield $bean;
+                }
+            }
+        }, $this->getFactory()->createBeanList());
+    }
+
     /**
      * @return BeanListInterface
      * @throws BeanException
      */
     public function getBeanList(): BeanListInterface
     {
-
-        if (null === $this->beanList) {
-            throw new BeanException('BeanList not initialized, run find() first.');
-        }
-        return $this->beanList;
+        return $this->getBeanGenerator()->toBeanList();
     }
 
     /**
@@ -128,48 +175,6 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
         return $beanList->offsetGet(0);
     }
 
-    /**
-     * @throws BeanException
-     */
-    public function find(): int
-    {
-        $this->checkExecutionAllowed();
-        if ($this->hasLimit() && $this->hasOffset()) {
-            $this->getLoader()->limit($this->getLimit(), $this->getOffset());
-        }
-        $foundRows = $this->getLoader()->find();
-        $this->beanList = $this->getFactory()->createBeanList();
-        while ($this->getLoader()->fetch()) {
-            $this->getBeanList()->push(
-                $this->initializeBeanWithAdditionlData($this->getLoader()->initializeBeanWithData($this->getFactory()->createBean()))
-            );
-        }
-        foreach ($this->getBeanFinderLinkList() as $link) {
-            $this->handleLinkedFinder($link->getBeanFinder(), $link->getField(), $link->getLinkFieldSelf(), $link->getLinkFieldRemote());
-        }
-        return $foundRows;
-    }
-
-    /**
-     * @param BeanFinderInterface $finder
-     * @param string $field
-     * @param string $linkFieldSelf
-     * @param string $linkFieldRemote
-     * @throws BeanException
-     */
-    protected function handleLinkedFinder(BeanFinderInterface $finder, string $field, string $linkFieldSelf, string $linkFieldRemote)
-    {
-        $idList = $this->getBeanList()->getData($linkFieldSelf);
-        $finder->initByValueList($linkFieldRemote, $idList);
-        $finder->find();
-        foreach ($this->getBeanList() as $parentBean) {
-            $parentBean->setData($field, $finder->getBeanList()->filter(
-                function (BeanInterface $childBean) use ($parentBean, $linkFieldSelf, $linkFieldRemote) {
-                    return $parentBean->getData($linkFieldSelf) == $childBean->getData($linkFieldRemote);
-                })
-            );
-        }
-    }
 
     /**
      * @param string $field
