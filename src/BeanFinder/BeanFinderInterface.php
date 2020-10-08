@@ -41,14 +41,16 @@ interface BeanFinderInterface extends OptionAwareInterface, AttributeAwareInterf
 
 
     /**
+     * @param bool $fetchAllData
      * @return BeanListInterface
      */
-    public function getBeanList(): BeanListInterface;
+    public function getBeanList(bool $fetchAllData = false): BeanListInterface;
 
     /**
+     * @param bool $fetchAllData
      * @return BeanInterface
      */
-    public function getBean(): BeanInterface;
+    public function getBean(bool $fetchAllData = false): BeanInterface;
 
 
     /**
