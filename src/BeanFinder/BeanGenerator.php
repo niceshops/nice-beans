@@ -81,6 +81,11 @@ class BeanGenerator implements \Iterator, BeanListAwareInterface
     {
         if ($this->getBeanList()->count() == 0) {
             foreach ($this->getGenerator() as $bean) {
+                foreach ($bean as $key => $item) {
+                    if ($item instanceof BeanGenerator) {
+                        $bean->setData($key, $item->toBeanList());
+                    }
+                }
                 $this->getBeanList()->push($bean);
             }
         }
