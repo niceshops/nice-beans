@@ -124,7 +124,8 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
      */
     public function getBeanGenerator(string $filterField = null, array $filterValueList = null): BeanGenerator
     {
-        return new BeanGenerator(function () use ($filterField, $filterValueList) {
+        $beanBuffer = [];
+        return new BeanGenerator(function () use ($filterField, $filterValueList, &$beanBuffer) {
             if ($this->hasBeanFinderLinkList()) {
                 foreach ($this->getBeanFinderLinkList() as $link) {
                     $link->getBeanFinder()->initByValueList($link->getLinkFieldRemote(), $this->getLoader()->preloadValueList($link->getLinkFieldSelf()));
@@ -143,9 +144,21 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
                 if (null !== $filterField && null !== $filterValueList) {
                     if ($bean->hasData($filterField) && in_array($bean->getData($filterField), $filterValueList)) {
                         yield $bean;
+                    } else {
+                        $beanBuffer[] = $bean;
                     }
                 } else {
                     yield $bean;
+                }
+            }
+
+            if (!$this->getLoader()->fetch()) {
+                foreach ($beanBuffer as $bean) {
+                    if (null !== $filterField && null !== $filterValueList) {
+                        if ($bean->hasData($filterField) && in_array($bean->getData($filterField), $filterValueList)) {
+                            yield $bean;
+                        }
+                    }
                 }
             }
         }, $this->getFactory()->createBeanList());
