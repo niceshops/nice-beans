@@ -28,7 +28,6 @@ class BeanGenerator implements BeanListInterface, BeanListAwareInterface
     {
         $this->beanList = $emptyBeanList;
         $this->generator = $generateFunction();
-        $this->generator->rewind();
     }
 
     /**
