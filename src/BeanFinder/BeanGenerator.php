@@ -10,7 +10,7 @@ use NiceshopsDev\Bean\BeanList\BeanListAwareTrait;
 use NiceshopsDev\Bean\BeanList\BeanListException;
 use NiceshopsDev\Bean\BeanList\BeanListInterface;
 
-class BeanGenerator implements \Iterator, BeanListAwareInterface, BeanListInterface
+class BeanGenerator implements BeanListInterface, BeanListAwareInterface
 {
     use BeanListAwareTrait;
 
@@ -39,39 +39,6 @@ class BeanGenerator implements \Iterator, BeanListAwareInterface, BeanListInterf
         return $this->generator;
     }
 
-    /**
-     * @return BeanInterface
-     */
-    public function current()
-    {
-        return $this->getGenerator()->current();
-    }
-
-    public function next()
-    {
-        $this->getGenerator()->next();
-    }
-
-    /**
-     * @return bool|float|int|string|null
-     */
-    public function key()
-    {
-        return $this->getGenerator()->key();
-    }
-
-    /**
-     * @return bool
-     */
-    public function valid()
-    {
-        return $this->getGenerator()->valid();
-    }
-
-    public function rewind()
-    {
-        $this->getGenerator()->rewind();
-    }
 
     /**
      * Convert the BeanGenerator into a BeanList
@@ -275,7 +242,7 @@ class BeanGenerator implements \Iterator, BeanListAwareInterface, BeanListInterf
      */
     public function getIterator()
     {
-        return $this;
+        return $this->getGenerator();
     }
 
     public function offsetExists($offset)
