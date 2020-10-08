@@ -129,7 +129,9 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
             if ($this->hasBeanFinderLinkList()) {
                 foreach ($this->getBeanFinderLinkList() as $link) {
                     $link->getBeanFinder()->initByValueList($link->getLinkFieldRemote(), $this->getLoader()->preloadValueList($link->getLinkFieldSelf()));
-                    $link->getBeanFinder()->find();
+                    if (!$link->getBeanFinder()->hasOption(self::OPTION_EXECUTED)) {
+                        $link->getBeanFinder()->find();
+                    }
                 }
             }
             while ($this->getLoader()->fetch()) {

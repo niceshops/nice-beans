@@ -52,7 +52,7 @@ class BeanGenerator implements BeanListInterface, BeanListAwareInterface
                 if ($recursive) {
                     foreach ($bean as $key => $item) {
                         if ($item instanceof BeanGenerator) {
-                            $bean->setData($key, $item->toBeanList());
+                            $bean->setData($key, $item->toBeanList($recursive));
                         }
                     }
                 }
