@@ -75,15 +75,18 @@ class BeanGenerator implements \Iterator, BeanListAwareInterface
     /**
      * Convert the BeanGenerator into a BeanList
      *
+     * @param bool $recursive
      * @return BeanListInterface
      */
-    public function toBeanList(): BeanListInterface
+    public function toBeanList(bool $recursive = false): BeanListInterface
     {
         if ($this->getBeanList()->count() == 0) {
             foreach ($this->getGenerator() as $bean) {
-                foreach ($bean as $key => $item) {
-                    if ($item instanceof BeanGenerator) {
-                        $bean->setData($key, $item->toBeanList());
+                if ($recursive) {
+                    foreach ($bean as $key => $item) {
+                        if ($item instanceof BeanGenerator) {
+                            $bean->setData($key, $item->toBeanList());
+                        }
                     }
                 }
                 $this->getBeanList()->push($bean);

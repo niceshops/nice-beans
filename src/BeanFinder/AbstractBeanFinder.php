@@ -151,21 +151,22 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     }
 
     /**
+     * @param bool $fetchAllData
      * @return BeanListInterface
-     * @throws BeanException
      */
-    public function getBeanList(): BeanListInterface
+    public function getBeanList(bool $fetchAllData = false): BeanListInterface
     {
-        return $this->getBeanGenerator()->toBeanList();
+        return $this->getBeanGenerator()->toBeanList($fetchAllData);
     }
 
     /**
+     * @param bool $fetchAllData
      * @return BeanInterface
      * @throws BeanException
      */
-    public function getBean(): BeanInterface
+    public function getBean(bool $fetchAllData = false): BeanInterface
     {
-        $beanList = $this->getBeanList();
+        $beanList = $this->getBeanList($fetchAllData);
         $count = $beanList->count();
         if ($count !== 1) {
             throw new BeanException('Could not get single bean, bean list contains ' . $count . ' beans.');
