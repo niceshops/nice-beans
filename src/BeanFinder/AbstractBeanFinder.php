@@ -144,16 +144,12 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
                         $bean->setData($link->getField(), $link->getBeanFinder()->getBeanGenerator($link->getLinkFieldRemote(), [$bean->getData($link->getLinkFieldSelf())]));
                     }
                 }
-                if (null !== $filterField && null !== $filterValueList) {
-                    $this->beanBuffer[] = $bean;
-                    if ($bean->hasData($filterField) && in_array($bean->getData($filterField), $filterValueList)) {
-                        yield $bean;
-                    }
-                } else {
+                if (null === $filterField && null === $filterValueList) {
                     yield $bean;
+                } else {
+                    $this->beanBuffer[] = $bean;
                 }
             }
-
             foreach ($this->beanBuffer as $bean) {
                 if (null !== $filterField && null !== $filterValueList) {
                     if ($bean->hasData($filterField) && in_array($bean->getData($filterField), $filterValueList)) {
