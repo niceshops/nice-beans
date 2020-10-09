@@ -117,6 +117,8 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
         return $this->getLoader()->find();
     }
 
+    private $beanBuffer = [];
+
     /**
      * @param string|null $filterField
      * @param array|null $filterValueList
@@ -124,8 +126,8 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
      */
     public function getBeanGenerator(string $filterField = null, array $filterValueList = null): BeanGenerator
     {
-        $beanBuffer = [];
-        return new BeanGenerator(function () use ($filterField, $filterValueList, &$beanBuffer) {
+
+        return new BeanGenerator(function () use ($filterField, $filterValueList) {
             if ($this->hasBeanFinderLinkList()) {
                 foreach ($this->getBeanFinderLinkList() as $link) {
                     $link->getBeanFinder()->initByValueList($link->getLinkFieldRemote(), $this->getLoader()->preloadValueList($link->getLinkFieldSelf()));
@@ -134,35 +136,35 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
                     }
                 }
             }
+
             while ($this->getLoader()->fetch()) {
                 $bean = $this->initializeBeanWithAdditionlData($this->getLoader()->initializeBeanWithData($this->getFactory()->createBean()));
                 if ($this->hasBeanFinderLinkList()) {
                     foreach ($this->getBeanFinderLinkList() as $link) {
-                        $bean->setData($link->getField(),  $link->getBeanFinder()->getBeanGenerator($link->getLinkFieldRemote(), [$bean->getData($link->getLinkFieldSelf())]));
+                        $bean->setData($link->getField(), $link->getBeanFinder()->getBeanGenerator($link->getLinkFieldRemote(), [$bean->getData($link->getLinkFieldSelf())]));
                     }
                 }
                 if (null !== $filterField && null !== $filterValueList) {
+                    $this->beanBuffer[] = $bean;
                     if ($bean->hasData($filterField) && in_array($bean->getData($filterField), $filterValueList)) {
                         yield $bean;
-                    } else {
-                        $beanBuffer[] = $bean;
                     }
                 } else {
                     yield $bean;
                 }
             }
 
-            if (!$this->getLoader()->fetch()) {
-                foreach ($beanBuffer as $bean) {
-                    if (null !== $filterField && null !== $filterValueList) {
-                        if ($bean->hasData($filterField) && in_array($bean->getData($filterField), $filterValueList)) {
-                            yield $bean;
-                        }
+            foreach ($this->beanBuffer as $bean) {
+                if (null !== $filterField && null !== $filterValueList) {
+                    if ($bean->hasData($filterField) && in_array($bean->getData($filterField), $filterValueList)) {
+                        yield $bean;
                     }
                 }
             }
+
         }, $this->getFactory()->createBeanList());
     }
+
 
     /**
      * @param bool $fetchAllData
