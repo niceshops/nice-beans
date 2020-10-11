@@ -11,7 +11,7 @@ use NiceshopsDev\NiceCore\Option\OptionAwareInterface;
  * Interface BeanFinderLoaderInterface
  * @package Niceshops\Library\Core
  */
-interface BeanLoaderInterface extends \Iterator, OptionAwareInterface, AttributeAwareInterface
+interface BeanLoaderInterface extends OptionAwareInterface, AttributeAwareInterface
 {
 
     /**
