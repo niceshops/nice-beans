@@ -11,7 +11,7 @@ use NiceshopsDev\NiceCore\Option\OptionAwareInterface;
  * Interface BeanFinderLoaderInterface
  * @package Niceshops\Library\Core
  */
-interface BeanLoaderInterface extends OptionAwareInterface, AttributeAwareInterface
+interface BeanLoaderInterface extends \Iterator, OptionAwareInterface, AttributeAwareInterface
 {
 
     /**
@@ -48,6 +48,12 @@ interface BeanLoaderInterface extends OptionAwareInterface, AttributeAwareInterf
      * @return $this
      */
     public function initByValueList(string $field, array $valueList);
+
+    /**
+     * @param string $field
+     * @return array
+     */
+    public function preloadValueList(string $field): array;
 
     /**
      * @param BeanInterface $bean

@@ -23,11 +23,6 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     protected const OPTION_EXECUTED = 'executed';
 
     /**
-     * @var BeanListInterface
-     */
-    protected $beanList;
-
-    /**
      * @var BeanLoaderInterface
      */
     private $loader;
@@ -86,6 +81,14 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     }
 
     /**
+     * @return bool
+     */
+    public function hasBeanFinderLinkList(): bool
+    {
+        return is_array($this->beanFinderLink_List) && count($this->beanFinderLink_List) > 0;
+    }
+
+    /**
      * @return BeanLoaderInterface
      */
     public function getLoader(): BeanLoaderInterface
@@ -101,26 +104,82 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
         return $this->factory;
     }
 
+
     /**
-     * @return BeanListInterface
      * @throws BeanException
      */
-    public function getBeanList(): BeanListInterface
+    public function find(): int
     {
-
-        if (null === $this->beanList) {
-            throw new BeanException('BeanList not initialized, run find() first.');
+        if ($this->hasLimit() && $this->hasOffset()) {
+            $this->getLoader()->limit($this->getLimit(), $this->getOffset());
         }
-        return $this->beanList;
+        return $this->getLoader()->find();
+    }
+
+    private $beanBuffer = [];
+
+    /**
+     * @param string|null $filterField
+     * @param array|null $filterValueList
+     * @return BeanGenerator
+     */
+    public function getBeanGenerator(string $filterField = null, array $filterValueList = null): BeanGenerator
+    {
+        if ($filterField === null || $filterValueList === null) {
+            $this->checkExecutionAllowed();
+        }
+        return new BeanGenerator(function () use ($filterField, $filterValueList) {
+            if ($this->hasBeanFinderLinkList()) {
+                foreach ($this->getBeanFinderLinkList() as $link) {
+                    $link->getBeanFinder()->initByValueList($link->getLinkFieldRemote(), $this->getLoader()->preloadValueList($link->getLinkFieldSelf()));
+                    if (!$link->getBeanFinder()->hasOption(self::OPTION_EXECUTED)) {
+                        $link->getBeanFinder()->find();
+                    }
+                }
+            }
+
+            while ($this->getLoader()->fetch()) {
+                $bean = $this->initializeBeanWithAdditionlData($this->getLoader()->initializeBeanWithData($this->getFactory()->createBean()));
+                if ($this->hasBeanFinderLinkList()) {
+                    foreach ($this->getBeanFinderLinkList() as $link) {
+                        $bean->setData($link->getField(), $link->getBeanFinder()->getBeanGenerator($link->getLinkFieldRemote(), [$bean->getData($link->getLinkFieldSelf())]));
+                    }
+                }
+                if (null === $filterField && null === $filterValueList) {
+                    yield $bean;
+                } else {
+                    $this->beanBuffer[] = $bean;
+                }
+            }
+            foreach ($this->beanBuffer as $bean) {
+                if (null !== $filterField && null !== $filterValueList) {
+                    if ($bean->hasData($filterField) && in_array($bean->getData($filterField), $filterValueList)) {
+                        yield $bean;
+                    }
+                }
+            }
+
+        }, $this->getFactory()->createBeanList());
+    }
+
+
+    /**
+     * @param bool $fetchAllData
+     * @return BeanListInterface
+     */
+    public function getBeanList(bool $fetchAllData = false): BeanListInterface
+    {
+        return $this->getBeanGenerator()->toBeanList($fetchAllData);
     }
 
     /**
+     * @param bool $fetchAllData
      * @return BeanInterface
      * @throws BeanException
      */
-    public function getBean(): BeanInterface
+    public function getBean(bool $fetchAllData = false): BeanInterface
     {
-        $beanList = $this->getBeanList();
+        $beanList = $this->getBeanList($fetchAllData);
         $count = $beanList->count();
         if ($count !== 1) {
             throw new BeanException('Could not get single bean, bean list contains ' . $count . ' beans.');
@@ -128,48 +187,6 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
         return $beanList->offsetGet(0);
     }
 
-    /**
-     * @throws BeanException
-     */
-    public function find(): int
-    {
-        $this->checkExecutionAllowed();
-        if ($this->hasLimit() && $this->hasOffset()) {
-            $this->getLoader()->limit($this->getLimit(), $this->getOffset());
-        }
-        $foundRows = $this->getLoader()->find();
-        $this->beanList = $this->getFactory()->createBeanList();
-        while ($this->getLoader()->fetch()) {
-            $this->getBeanList()->push(
-                $this->initializeBeanWithAdditionlData($this->getLoader()->initializeBeanWithData($this->getFactory()->createBean()))
-            );
-        }
-        foreach ($this->getBeanFinderLinkList() as $link) {
-            $this->handleLinkedFinder($link->getBeanFinder(), $link->getField(), $link->getLinkFieldSelf(), $link->getLinkFieldRemote());
-        }
-        return $foundRows;
-    }
-
-    /**
-     * @param BeanFinderInterface $finder
-     * @param string $field
-     * @param string $linkFieldSelf
-     * @param string $linkFieldRemote
-     * @throws BeanException
-     */
-    protected function handleLinkedFinder(BeanFinderInterface $finder, string $field, string $linkFieldSelf, string $linkFieldRemote)
-    {
-        $idList = $this->getBeanList()->getData($linkFieldSelf);
-        $finder->initByValueList($linkFieldRemote, $idList);
-        $finder->find();
-        foreach ($this->getBeanList() as $parentBean) {
-            $parentBean->setData($field, $finder->getBeanList()->filter(
-                function (BeanInterface $childBean) use ($parentBean, $linkFieldSelf, $linkFieldRemote) {
-                    return $parentBean->getData($linkFieldSelf) == $childBean->getData($linkFieldRemote);
-                })
-            );
-        }
-    }
 
     /**
      * @param string $field
