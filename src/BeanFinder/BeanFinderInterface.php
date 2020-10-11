@@ -39,6 +39,13 @@ interface BeanFinderInterface extends OptionAwareInterface, AttributeAwareInterf
      */
     public function initByValueList(string $field, array $list);
 
+    /**
+     * @param string|null $filterField
+     * @param array|null $filterValueList
+     * @return BeanGenerator
+     */
+    public function getBeanGenerator(string $filterField = null, array $filterValueList = null): BeanGenerator;
+
 
     /**
      * @param bool $fetchAllData
