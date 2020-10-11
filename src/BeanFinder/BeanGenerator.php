@@ -47,7 +47,7 @@ class BeanGenerator implements BeanListInterface, BeanListAwareInterface
      */
     public function toBeanList(bool $recursive = false): BeanListInterface
     {
-        if ($this->getBeanList()->count() == 0) {
+        if ($this->getBeanList()->count() == 0 && $this->getGenerator()->valid()) {
             foreach ($this->getGenerator() as $bean) {
                 if ($recursive) {
                     foreach ($bean as $key => $item) {
