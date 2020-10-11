@@ -64,62 +64,62 @@ class BeanGenerator implements BeanListInterface, BeanListAwareInterface
 
     public function setData($name, $value)
     {
-        $this->toBeanList()->setData($name, $value);
+        return $this->toBeanList()->setData($name, $value);
     }
 
     public function getData($name)
     {
-        $this->toBeanList()->getData($name);
+        return $this->toBeanList()->getData($name);
     }
 
     public function hasData($name)
     {
-        $this->toBeanList()->hasData($name);
+        return $this->toBeanList()->hasData($name);
     }
 
     public function removeData($name)
     {
-        $this->toBeanList()->removeData($name);
+        return $this->toBeanList()->removeData($name);
     }
 
     public function resetData()
     {
-        $this->toBeanList()->resetData();
+        return $this->toBeanList()->resetData();
     }
 
     public function getDataType($name)
     {
-        $this->toBeanList()->getDataType($name);
+        return $this->toBeanList()->getDataType($name);
     }
 
     public function toArray()
     {
-        $this->toBeanList()->toArray();
+        return $this->toBeanList()->toArray();
     }
 
     public function setFromArray(array $data)
     {
-        $this->toBeanList()->setFromArray($data);
+        return $this->toBeanList()->setFromArray($data);
     }
 
     public function addBean(BeanInterface $bean)
     {
-        $this->toBeanList()->addBean($bean);
+        return $this->toBeanList()->addBean($bean);
     }
 
     public function addBeans($beans)
     {
-        $this->toBeanList()->addBeans($beans);
+        return $this->toBeanList()->addBeans($beans);
     }
 
     public function removeBean(BeanInterface $bean)
     {
-        $this->toBeanList()->removeBean($bean);
+        return $this->toBeanList()->removeBean($bean);
     }
 
     public function hasBean(BeanInterface $bean)
     {
-        $this->toBeanList()->hasBean($bean);
+        return $this->toBeanList()->hasBean($bean);
     }
 
     public function indexOfBean(BeanInterface $bean)
