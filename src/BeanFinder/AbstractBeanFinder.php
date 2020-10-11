@@ -110,7 +110,6 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
      */
     public function find(): int
     {
-        $this->checkExecutionAllowed();
         if ($this->hasLimit() && $this->hasOffset()) {
             $this->getLoader()->limit($this->getLimit(), $this->getOffset());
         }
@@ -126,7 +125,9 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
      */
     public function getBeanGenerator(string $filterField = null, array $filterValueList = null): BeanGenerator
     {
-
+        if ($filterField === null || $filterValueList === null) {
+            $this->checkExecutionAllowed();
+        }
         return new BeanGenerator(function () use ($filterField, $filterValueList) {
             if ($this->hasBeanFinderLinkList()) {
                 foreach ($this->getBeanFinderLinkList() as $link) {
