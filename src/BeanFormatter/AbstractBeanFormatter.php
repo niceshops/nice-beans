@@ -5,6 +5,7 @@ namespace NiceshopsDev\Bean\BeanFormatter;
 
 
 
+use NiceshopsDev\Bean\BeanException;
 use NiceshopsDev\Bean\BeanInterface;
 
 abstract class AbstractBeanFormatter implements BeanFormatterInterface
@@ -80,8 +81,13 @@ abstract class AbstractBeanFormatter implements BeanFormatterInterface
             {
                 $data_Map = [];
                 foreach ($this->bean as $name => $value) {
-                    $result = $this->convertValueByDataType($this->bean->getDataType($name), $value);
-                    $result = $this->formatValueByName($name, $result, $value);
+                    try {
+                        $result = $this->convertValueByDataType($this->bean->getDataType($name), $value);
+                        $result = $this->formatValueByName($name, $result, $value);
+                    } catch (\Exception $exception) {
+                        throw new BeanException("Unable to format $name.", 0, $exception);
+                    }
+
                     $data_Map[$name] = $result;
                 }
                 return $data_Map;

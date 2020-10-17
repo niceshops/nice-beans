@@ -5,6 +5,7 @@ namespace NiceshopsDev\Bean\BeanParser;
 
 
 
+use NiceshopsDev\Bean\BeanException;
 use NiceshopsDev\Bean\BeanInterface;
 
 abstract class AbstractBeanParser implements BeanParserInterface
@@ -107,8 +108,12 @@ abstract class AbstractBeanParser implements BeanParserInterface
             public function getValue(string $name)
             {
                 $dataMap = $this->data_Map;
-                $result = $this->convertValueByDataType($this->bean->getDataType($name), $dataMap[$name]);
-                $result = $this->parseValueByName($name, $result, $dataMap[$name]);
+                try {
+                    $result = $this->convertValueByDataType($this->bean->getDataType($name), $dataMap[$name]);
+                    $result = $this->parseValueByName($name, $result, $dataMap[$name]);
+                } catch (\Exception $exception) {
+                    throw new BeanException("Unable to parse $name.", 0, $exception);
+                }
                 return $result;
             }
         };
