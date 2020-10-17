@@ -48,6 +48,12 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     private $beanFinderLink_List = [];
 
     /**
+     * @var BeanInterface[]
+     */
+    private $beanBuffer = [];
+
+
+    /**
      * AbstractBeanFinderFactory constructor.
      *
      * @param BeanLoaderInterface $loader
@@ -116,7 +122,6 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
         return $this->getLoader()->find();
     }
 
-    private $beanBuffer = [];
 
     /**
      * @param string|null $filterField
@@ -125,43 +130,47 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
      */
     public function getBeanGenerator(string $filterField = null, array $filterValueList = null): BeanGenerator
     {
-        if ($filterField === null || $filterValueList === null) {
-            $this->checkExecutionAllowed();
-        }
         return new BeanGenerator(function () use ($filterField, $filterValueList) {
-            if ($this->hasBeanFinderLinkList()) {
-                foreach ($this->getBeanFinderLinkList() as $link) {
-                    $link->getBeanFinder()->initByValueList($link->getLinkFieldRemote(), $this->getLoader()->preloadValueList($link->getLinkFieldSelf()));
-                    if (!$link->getBeanFinder()->hasOption(self::OPTION_EXECUTED)) {
-                        $link->getBeanFinder()->find();
-                    }
-                }
-            }
+            $this->initLinkedFinder();
 
-            while ($this->getLoader()->fetch()) {
-                $bean = $this->initializeBeanWithAdditionlData($this->getLoader()->initializeBeanWithData($this->getFactory()->createBean()));
-                if ($this->hasBeanFinderLinkList()) {
-                    foreach ($this->getBeanFinderLinkList() as $link) {
-                        $bean->setData($link->getField(), $link->getBeanFinder()->getBeanGenerator($link->getLinkFieldRemote(), [$bean->getData($link->getLinkFieldSelf())]));
+            if ($this->checkExecutionAllowed()) {
+                while ($this->getLoader()->fetch()) {
+                    $bean = $this->initializeBeanWithAdditionlData($this->getLoader()->initializeBeanWithData($this->getFactory()->createBean()));
+                    if ($this->hasBeanFinderLinkList()) {
+                        foreach ($this->getBeanFinderLinkList() as $link) {
+                            $bean->setData($link->getField(), $link->getBeanFinder()->getBeanGenerator($link->getLinkFieldRemote(), [$bean->getData($link->getLinkFieldSelf())]));
+                        }
                     }
-                }
-                if (null === $filterField && null === $filterValueList) {
-                    yield $bean;
-                } else {
+                    if (null === $filterField && null === $filterValueList) {
+                        yield $bean;
+                    }
                     $this->beanBuffer[] = $bean;
                 }
             }
+
             foreach ($this->beanBuffer as $bean) {
                 if (null !== $filterField && null !== $filterValueList) {
                     if ($bean->hasData($filterField) && in_array($bean->getData($filterField), $filterValueList)) {
                         yield $bean;
                     }
+                } else {
+                    yield $bean;
                 }
             }
 
         }, $this->getFactory()->createBeanList());
     }
 
+    protected function initLinkedFinder() {
+        if ($this->hasBeanFinderLinkList()) {
+            foreach ($this->getBeanFinderLinkList() as $link) {
+                $link->getBeanFinder()->initByValueList($link->getLinkFieldRemote(), $this->getLoader()->preloadValueList($link->getLinkFieldSelf()));
+                if (!$link->getBeanFinder()->hasOption(self::OPTION_EXECUTED)) {
+                    $link->getBeanFinder()->find();
+                }
+            }
+        }
+    }
 
     /**
      * @param bool $fetchAllData
@@ -267,9 +276,10 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
     private function checkExecutionAllowed()
     {
         if ($this->hasOption(self::OPTION_EXECUTED)) {
-            throw new BeanException("Finder executed twice!");
+            return false;
         } else {
             $this->addOption(self::OPTION_EXECUTED);
+            return true;
         }
     }
 }
