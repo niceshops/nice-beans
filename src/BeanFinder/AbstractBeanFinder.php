@@ -146,15 +146,19 @@ abstract class AbstractBeanFinder implements BeanFinderInterface
                     }
                     $this->beanBuffer[] = $bean;
                 }
+            } else {
+                foreach ($this->beanBuffer as $bean) {
+                    if (null === $filterField && null === $filterValueList) {
+                        yield $bean;
+                    }
+                }
             }
 
-            foreach ($this->beanBuffer as $bean) {
-                if (null !== $filterField && null !== $filterValueList) {
+            if (null !== $filterField && null !== $filterValueList) {
+                foreach ($this->beanBuffer as $bean) {
                     if ($bean->hasData($filterField) && in_array($bean->getData($filterField), $filterValueList)) {
                         yield $bean;
                     }
-                } else {
-                    yield $bean;
                 }
             }
 
