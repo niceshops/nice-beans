@@ -657,9 +657,11 @@ abstract class AbstractBaseBean implements BeanInterface
             throw new BeanException(sprintf("Data '%s' can not be NULL!", $name), BeanException::ERROR_CODE_DATA_IS_NOT_NULLABLE);
         }
 
-        $callback = $this->getDataTypeCallback($name);
-        if (null !== $callback) {
-            return call_user_func($callback, $value, $name, $this);
+        if (null !== $value) {
+            $callback = $this->getDataTypeCallback($name);
+            if (null !== $callback) {
+                return call_user_func($callback, $value, $name, $this);
+            }
         }
 
         return $value;
