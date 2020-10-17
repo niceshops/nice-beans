@@ -114,12 +114,6 @@ abstract class AbstractBeanProcessor implements BeanProcessorInterface
         return $this->validateForSave($bean);
     }
 
-    /**
-     * @param BeanInterface $bean
-     * @return bool
-     */
-    abstract protected function validateForSave(BeanInterface $bean): bool;
-
 
     /**
      * Returns a filtered copy of the source bean list.
@@ -150,5 +144,17 @@ abstract class AbstractBeanProcessor implements BeanProcessorInterface
      * @param BeanInterface $bean
      * @return bool
      */
-    abstract protected function validateForDelete(BeanInterface $bean): bool;
+    protected function validateForSave(BeanInterface $bean): bool
+    {
+        return true;
+    }
+
+    /**
+     * @param BeanInterface $bean
+     * @return bool
+     */
+    protected function validateForDelete(BeanInterface $bean): bool
+    {
+        return true;
+    }
 }
