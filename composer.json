@@ -1,5 +1,5 @@
 {
-    "name": "niceshops/nice-beans",
+    "name": "robertkleinschuster/nice-beans",
     "description": "JavaBeans Implementierung für PHP",
     "license" : "BSD-3-Clause",
     "require": {
